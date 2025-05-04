@@ -61,7 +61,6 @@ interface PermitUser {
 export const permitAuth = async (req: Request, res: Response, next: NextFunction) => {
   const apiKey = req.headers['x-api-key'] as string;
   const url = req.body.url;
-  const isAdvanced = req.body.advanced === true;
 
   if (!apiKey) {
     return res.status(401).json({ success: false, error: 'API key is required' });
@@ -94,9 +93,6 @@ export const permitAuth = async (req: Request, res: Response, next: NextFunction
         return res.status(401).json({ success: false, error: 'Invalid API key' });
     }
 
-    const hostname = new URL(url).hostname;
-    const isBlacklistedDomain = isBlacklisted(hostname);
-
     // Create user object with proper tier-based roles
     const user: PermitUser = {
       key: userKey,
@@ -107,12 +103,22 @@ export const permitAuth = async (req: Request, res: Response, next: NextFunction
       }
     };
 
+    // For routes that don't have a URL (like text processing), skip URL-specific checks
+    if (!url) {
+      // Add user context to request for downstream use
+      req.user = user;
+      return next();
+    }
+
+    const hostname = new URL(url).hostname;
+    const isBlacklistedDomain = isBlacklisted(hostname);
+
     logger.debug('User object for permission check:', { 
       userKey,
       tier, 
       apiKey,
       roles: user.attributes?.roles,
-      action: isAdvanced ? 'scrape_advanced' : 'scrape_basic',
+      action: req.body.advanced ? 'scrape_advanced' : 'scrape_basic',
       resourceType: 'website',
       resourceKey: hostname
     });
@@ -126,13 +132,13 @@ export const permitAuth = async (req: Request, res: Response, next: NextFunction
       key: hostname,
       attributes: {
         domain: hostname,
-        is_premium: isAdvanced,
+        is_premium: req.body.advanced,
         is_blacklisted: isBlacklistedDomain
       }
     };
 
     // Determine required action based on request parameters
-    const action = isAdvanced ? 'scrape_advanced' : 'scrape_basic';
+    const action = req.body.advanced ? 'scrape_advanced' : 'scrape_basic';
 
     logger.debug('Permission check details:', { 
       action, 

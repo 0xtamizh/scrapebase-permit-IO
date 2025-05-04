@@ -370,6 +370,101 @@
             background: var(--dark-primary);
             border-color: var(--dark-primary);
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 1rem;
+                margin: 1rem 0;
+            }
+
+            .progress-step {
+                width: 100%;
+                padding: 0;
+            }
+
+            .progress-step::before {
+                display: none;
+            }
+
+            .step-number {
+                margin: 0 auto 0.25rem;
+            }
+
+            .grid-cols-2, .grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .domain-btn {
+                font-size: 0.9rem;
+            }
+
+            .toggle-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .feature-list {
+                margin: 0.5rem 0;
+            }
+
+            .blacklist-domain {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 0.25rem 0;
+            }
+
+            #systemStatus {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 1rem;
+            }
+        }
+
+        @media (min-width: 640px) and (max-width: 1024px) {
+            .grid-cols-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            #systemStatus {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Update existing styles */
+        .dark-card {
+            @media (max-width: 768px) {
+                padding: 1rem;
+            }
+        }
+
+        .feature-list {
+            height: 100%;
+        }
+
+        .blacklist-container {
+            display: grid;
+            gap: 0.5rem;
+            @media (min-width: 640px) {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -463,7 +558,7 @@
 
         <!-- Main Interface -->
         <div class="max-w-4xl mx-auto">
-            <!-- Plan Selection -->
+            <!-- Plan Selection Toggle -->
             <div class="toggle-container mb-8">
                 <span class="text-lg">Basic Plan</span>
                 <label class="toggle-switch">
@@ -473,52 +568,12 @@
                 <span class="text-lg">Pro Plan</span>
             </div>
 
-            <!-- Feature Comparison -->
-            <div class="grid grid-cols-2 gap-8 mb-8">
-                <div class="feature-list">
-                    <h3 class="text-lg font-bold mb-4 flex items-center">
-                        <span class="mr-2">Basic Features</span>
-                        <span class="text-xs px-2 py-1 bg-gray-700 rounded">5 req/min</span>
-                    </h3>
-                    <div class="feature-item">
-                        <i class="fas fa-check"></i>
-                        <span>Basic content scraping</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-check"></i>
-                        <span>Public domains only</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-check"></i>
-                        <span>Raw content view</span>
-                    </div>
-                </div>
-                <div class="feature-list">
-                    <h3 class="text-lg font-bold mb-4 flex items-center">
-                        <span class="mr-2">Pro Features</span>
-                        <span class="text-xs px-2 py-1 bg-blue-700 rounded">10 req/min</span>
-                    </h3>
-                    <div class="feature-item">
-                        <i class="fas fa-star"></i>
-                        <span>Advanced scraping</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-star"></i>
-                        <span>Content cleaning</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-star"></i>
-                        <span>Markdown rendering</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- Domain Selection -->
-            <div class="dark-card p-6 mb-6">
+            <div class="dark-card p-6 mb-6 rounded-xl">
                 <h3 class="text-xl font-bold mb-4">Select Domain</h3>
                 <p class="text-sm mb-4">Click any example domain to instantly scrape, or enter your own:</p>
                 
-                <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="grid grid-cols-3 gap-4 mb-4 sm:grid-cols-2 md:grid-cols-3">
                     <button class="domain-btn" data-domain="example.com">
                         example.com
                         <small class="block text-gray-400">Demo site</small>
@@ -545,18 +600,18 @@
                     </button>
                 </div>
 
-                <div class="flex gap-4">
+                <div class="flex flex-col sm:flex-row gap-4">
                     <input type="text" id="customDomain" 
                            placeholder="Or enter custom domain..." 
-                           class="flex-1 p-3 dark-input rounded">
-                    <button id="scrapeBtn" class="btn btn-primary whitespace-nowrap">
+                           class="w-full sm:flex-1 p-3 dark-input rounded">
+                    <button id="scrapeBtn" class="btn btn-primary whitespace-nowrap rounded-lg w-full sm:w-auto">
                         <span id="scrapeBtnText">Start Scraping</span>
                         <span id="scrapeSpinner" class="spinner" style="display: none;"></span>
                     </button>
                 </div>
 
                 <div class="mt-4" id="blacklistWarning" style="display: none;">
-                    <div class="bg-red-900/50 border border-red-700 rounded p-4">
+                    <div class="bg-red-900/50 border border-red-700 rounded-lg p-4">
                         <div class="flex items-start">
                             <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
                             <div class="ml-3">
@@ -580,41 +635,116 @@
             </div>
 
             <!-- Pro Features -->
-            <div id="proFeatures" class="dark-card p-6 mb-6" style="display: none;">
+            <div id="proFeatures" class="dark-card p-6 mb-6 rounded-xl" style="display: none;">
                 <h3 class="text-xl font-bold mb-4">Pro Features</h3>
                 <div class="space-y-4">
                     <label class="flex items-center space-x-3">
                         <input type="checkbox" id="cleanContent" class="form-checkbox">
                         <span>Clean Content</span>
+                        <span class="text-sm text-gray-400">(Remove extra spaces and special characters)</span>
+                    </label>
+                    <label class="flex items-center space-x-3">
+                        <input type="checkbox" id="summarizeContent" class="form-checkbox">
+                        <span>Summarize Content</span>
+                        <span class="text-sm text-gray-400">(AI-powered content summarization)</span>
                     </label>
                 </div>
             </div>
 
-            <!-- Scrape Button -->
-            <button id="scrapeBtn" class="btn btn-primary w-full mb-6">
-                <span id="scrapeBtnText">Start Scraping</span>
-                <span id="scrapeSpinner" class="spinner" style="display: none;"></span>
-            </button>
-
             <!-- Results Area -->
-            <div id="results" class="dark-card p-6" style="display: none;">
+            <div id="results" class="dark-card p-6 mb-6 rounded-xl" style="display: none;">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">Results</h3>
-                    <button id="copyBtn" class="btn">
+                    <button id="copyBtn" class="btn rounded-lg">
                         <i class="fas fa-copy"></i> Copy
                     </button>
                 </div>
 
                 <div class="result-toggle">
-                    <button id="rawBtn" class="active">Raw Content</button>
-                    <button id="renderedBtn">Rendered</button>
+                    <button id="rawBtn" class="active rounded-lg">Raw Content</button>
+                    <button id="renderedBtn" class="rounded-lg">Rendered</button>
                 </div>
 
-                <div id="resultsContent" class="code-container">
+                <div id="resultsContent" class="code-container rounded-lg">
                     <!-- Results will be inserted here -->
                 </div>
                 <div id="renderedContent" class="prose prose-invert max-w-none mt-6" style="display: none;">
                     <!-- Rendered content will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Plan Comparison -->
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="feature-list rounded-xl transform hover:scale-105 transition-transform duration-200">
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-t-xl border-b border-gray-700">
+                        <h3 class="text-2xl font-bold mb-2 flex items-center justify-between">
+                            <span>Basic Plan</span>
+                            <span class="text-sm px-3 py-1 bg-gray-700 rounded-full">Free</span>
+                        </h3>
+                        <p class="text-gray-400 text-sm">Perfect for basic scraping needs</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="feature-item">
+                            <i class="fas fa-check text-green-500"></i>
+                            <span>5 requests/minute</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-green-500"></i>
+                            <span>Basic content scraping</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-green-500"></i>
+                            <span>Public domains only</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-green-500"></i>
+                            <span>Raw content view</span>
+                        </div>
+                        <div class="feature-item text-gray-500">
+                            <i class="fas fa-times"></i>
+                            <span>Content cleaning</span>
+                        </div>
+                        <div class="feature-item text-gray-500">
+                            <i class="fas fa-times"></i>
+                            <span>AI summarization</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-list rounded-xl transform hover:scale-105 transition-transform duration-200 border-2 border-blue-500">
+                    <div class="bg-gradient-to-br from-blue-900 to-blue-800 p-6 rounded-t-xl border-b border-blue-700">
+                        <h3 class="text-2xl font-bold mb-2 flex items-center justify-between">
+                            <span>Pro Plan</span>
+                            <span class="text-sm px-3 py-1 bg-blue-700 rounded-full">Premium</span>
+                        </h3>
+                        <p class="text-blue-300 text-sm">Advanced features for power users</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="feature-item">
+                            <i class="fas fa-star text-yellow-500"></i>
+                            <span>10 requests/minute</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-star text-yellow-500"></i>
+                            <span>Advanced scraping</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-star text-yellow-500"></i>
+                            <span>All domains</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-star text-yellow-500"></i>
+                            <span>Content cleaning</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-star text-yellow-500"></i>
+                            <span>AI summarization</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-star text-yellow-500"></i>
+                            <span>Priority support</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -627,26 +757,23 @@
                 <!-- System Status -->
                 <div class="mb-8">
                     <h4 class="text-lg font-semibold mb-4">System Status</h4>
-                    <div id="systemStatus" class="grid grid-cols-3 gap-4">
+                    <div id="systemStatus" class="grid grid-cols-3 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <!-- Status will be populated dynamically -->
-                        <div class="dark-card p-4">
-                            <div class="text-sm text-gray-400">Loading status...</div>
-                        </div>
                     </div>
                 </div>
                 
                 <!-- Blacklist Management -->
                 <div class="mb-8">
                     <h4 class="text-lg font-semibold mb-4">Blacklist Management</h4>
-                    <div class="flex gap-4 mb-4">
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
                         <input type="text" id="newBlacklistDomain" 
                                placeholder="Enter domain to blacklist..." 
-                               class="flex-1 p-3 dark-input rounded">
-                        <button id="addBlacklistBtn" class="btn btn-primary">
+                               class="w-full sm:flex-1 p-3 dark-input rounded">
+                        <button id="addBlacklistBtn" class="btn btn-primary w-full sm:w-auto">
                             Add to Blacklist
                         </button>
                     </div>
-                    <div id="blacklistContainer" class="flex flex-wrap gap-2">
+                    <div id="blacklistContainer" class="blacklist-container">
                         <!-- Blacklisted domains will be added here -->
                     </div>
                 </div>
@@ -660,11 +787,32 @@
         const API_ENDPOINT = 'http://localhost:8080/api/processLinks';
         const BLACKLIST_ENDPOINT = 'http://localhost:8080/api/blacklist';
         
+        // API Keys - Make sure these match your backend configuration
         const API_KEYS = {
             free: '2025DEVChallenge_free',
             pro: '2025DEVChallenge_pro',
             admin: '2025DEVChallenge_admin'
         };
+
+        // Get current API key based on user state
+        function getCurrentApiKey() {
+            const loginState = JSON.parse(localStorage.getItem('loginState') || '{}');
+            if (!loginState) return null;
+
+            if (loginState.isAdmin) {
+                return API_KEYS.admin;
+            } else if (loginState.isPro) {
+                return API_KEYS.pro;
+            }
+            return API_KEYS.free;
+        }
+
+        // Check if user is logged in and has valid API key
+        function isLoggedIn() {
+            const loginState = JSON.parse(localStorage.getItem('loginState') || '{}');
+            const apiKey = getCurrentApiKey();
+            return loginState && apiKey;
+        }
 
         // DOM Elements
         const loginModal = document.getElementById('loginModal');
@@ -706,9 +854,12 @@
                 userCreds.style.display = loginState.isAdmin ? 'none' : 'block';
                 adminCreds.style.display = loginState.isAdmin ? 'block' : 'none';
 
+                // Load blacklist for all users
+                loadBlacklist();
+                updateCurrentBlacklist();
+
                 // Load admin features if in admin mode
                 if (loginState.isAdmin) {
-                    loadBlacklist();
                     loadSystemStatus();
                 }
             } else {
@@ -722,10 +873,9 @@
             userCreds.style.display = modeToggle.checked ? 'none' : 'block';
             adminCreds.style.display = modeToggle.checked ? 'block' : 'none';
             
-            // Load blacklist if in admin mode
-            if (modeToggle.checked) {
-                loadBlacklist();
-            }
+            // Always load blacklist
+            loadBlacklist();
+            updateCurrentBlacklist();
         };
 
         // Paste credentials
@@ -743,17 +893,29 @@
         loginForm.onsubmit = (e) => {
             e.preventDefault();
             const isAdmin = modeToggle.checked;
+            const isPro = planToggle.checked;
             
             // Save login state
             localStorage.setItem('loginState', JSON.stringify({
                 isAdmin,
-                isPro: planToggle.checked,
+                isPro,
                 timestamp: new Date().getTime()
             }));
 
+            // Verify API key is available
+            const apiKey = getCurrentApiKey();
+            if (!apiKey) {
+                alert('Error: Unable to initialize API key. Please try logging in again.');
+                return;
+            }
+
             loginModal.style.display = 'none';
-            userTier.textContent = isAdmin ? 'Admin Mode' : 'User Mode';
+            userTier.textContent = isAdmin ? 'Admin Mode' : (isPro ? 'Pro Mode' : 'Basic Mode');
             adminInterface.style.display = isAdmin ? 'block' : 'none';
+
+            // Load blacklist after successful login
+            loadBlacklist().catch(console.error);
+            updateCurrentBlacklist().catch(console.error);
         };
 
         // Handle plan toggle
@@ -848,9 +1010,59 @@
                     resultsContent.innerHTML = `<pre class="whitespace-pre-wrap">${data.content}</pre>`;
                     renderedBtn.style.display = planToggle.checked ? 'block' : 'none';
                     
-                    // Update rendered content if it's currently visible
-                    if (renderedContent.style.display === 'block') {
-                        renderedContent.innerHTML = marked.parse(data.content);
+                    // Process text if pro features are enabled
+                    if (planToggle.checked && (document.getElementById('cleanContent').checked || document.getElementById('summarizeContent').checked)) {
+                        try {
+                            const processResponse = await fetch('http://localhost:8080/api/text/process', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-api-key': apiKey
+                                },
+                                body: JSON.stringify({
+                                    text: data.content,
+                                    clean: document.getElementById('cleanContent').checked,
+                                    summarize: document.getElementById('summarizeContent').checked
+                                })
+                            });
+
+                            const processData = await processResponse.json();
+                            
+                            if (processData.success) {
+                                resultsContent.innerHTML = `<pre class="whitespace-pre-wrap">${processData.content}</pre>`;
+                                
+                                // Update rendered content if it's currently visible
+                                if (renderedContent.style.display === 'block') {
+                                    renderedContent.innerHTML = marked.parse(processData.content);
+                                }
+                            } else {
+                                // Show error but keep original content
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'bg-red-900/50 border border-red-700 rounded p-4 mb-4';
+                                errorDiv.innerHTML = `
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-circle text-red-500 mt-1"></i>
+                                        <div class="ml-3">
+                                            <h4 class="text-red-400 font-semibold">Processing Error</h4>
+                                            <p class="text-sm text-red-300">${processData.error}: ${processData.details || ''}</p>
+                                        </div>
+                                    </div>`;
+                                resultsContent.insertBefore(errorDiv, resultsContent.firstChild);
+                            }
+                        } catch (error) {
+                            // Show error but keep original content
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'bg-red-900/50 border border-red-700 rounded p-4 mb-4';
+                            errorDiv.innerHTML = `
+                                <div class="flex items-start">
+                                    <i class="fas fa-exclamation-circle text-red-500 mt-1"></i>
+                                    <div class="ml-3">
+                                        <h4 class="text-red-400 font-semibold">Processing Error</h4>
+                                        <p class="text-sm text-red-300">Failed to process text: ${error.message}</p>
+                                    </div>
+                                </div>`;
+                            resultsContent.insertBefore(errorDiv, resultsContent.firstChild);
+                        }
                     }
                 } else {
                     // Handle rate limit error
@@ -1039,17 +1251,25 @@
 
         // Admin Blacklist Management
         async function loadBlacklist() {
+            if (!isLoggedIn()) {
+                throw new Error('Please log in to view blacklist');
+            }
+
             try {
-                const response = await fetch('http://localhost:8080/api/blacklist', {
+                const apiKey = getCurrentApiKey();
+                console.log('Using API Key:', apiKey); // Debug log
+
+                const response = await fetch(BLACKLIST_ENDPOINT, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'x-api-key': API_KEYS.admin
+                        'x-api-key': apiKey
                     }
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
                 
                 const domains = await response.json();
@@ -1058,29 +1278,110 @@
                 console.error('Failed to load blacklist:', error);
                 const container = document.getElementById('blacklistContainer');
                 container.innerHTML = `
-                    <div class="text-red-500 p-4">Failed to load blacklist: ${error.message}</div>
+                    <div class="bg-red-900/50 border border-red-700 rounded-lg p-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                            <span class="text-red-400">${error.message}</span>
+                        </div>
+                        <button onclick="retryLoadBlacklist()" class="mt-2 px-3 py-1 bg-red-800 hover:bg-red-700 rounded text-sm">
+                            Retry
+                        </button>
+                    </div>
                 `;
+            }
+        }
+
+        // Add retry function
+        async function retryLoadBlacklist() {
+            try {
+                await loadBlacklist();
+            } catch (error) {
+                console.error('Retry failed:', error);
+            }
+        }
+
+        // Update current blacklist with better error handling
+        async function updateCurrentBlacklist() {
+            if (!isLoggedIn()) {
+                return; // Silently fail if not logged in
+            }
+
+            try {
+                const apiKey = getCurrentApiKey();
+                console.log('Updating blacklist with API Key:', apiKey); // Debug log
+
+                const response = await fetch(BLACKLIST_ENDPOINT, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'x-api-key': apiKey
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                const domains = await response.json();
+                const container = document.getElementById('currentBlacklist');
+                
+                if (!Array.isArray(domains)) {
+                    throw new Error('Invalid response format');
+                }
+                
+                if (domains.length === 0) {
+                    container.innerHTML = `
+                        <span class="text-gray-500 block w-full text-center p-2">
+                            No domains blacklisted
+                        </span>`;
+                    return;
+                }
+                
+                container.innerHTML = domains.map(domain => `
+                    <span class="px-3 py-2 bg-red-900/30 border border-red-700 rounded text-sm flex-grow-0 break-all">
+                        ${domain}
+                    </span>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to update blacklist:', error);
+                const container = document.getElementById('currentBlacklist');
+                container.innerHTML = `
+                    <div class="bg-red-900/50 border border-red-700 rounded-lg p-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                            <span class="text-red-400">${error.message}</span>
+                        </div>
+                        <button onclick="retryLoadBlacklist()" class="mt-2 px-3 py-1 bg-red-800 hover:bg-red-700 rounded text-sm">
+                            Retry
+                        </button>
+                    </div>`;
             }
         }
 
         // Update blacklist UI
         function updateBlacklistUI(domains) {
             const container = document.getElementById('blacklistContainer');
+            const loginState = JSON.parse(localStorage.getItem('loginState') || '{}');
+            const isAdmin = loginState.isAdmin;
+            
             if (!Array.isArray(domains) || domains.length === 0) {
                 container.innerHTML = `
-                    <div class="text-gray-400 p-4">No domains in blacklist</div>
+                    <div class="text-gray-400 p-4 text-center">No domains in blacklist</div>
                 `;
                 return;
             }
             
             container.innerHTML = domains.map(domain => `
-                <div class="blacklist-domain group relative">
-                    <span class="font-mono">${domain}</span>
-                    <button onclick="removeDomain('${domain}')" 
-                            class="ml-2 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Remove from blacklist">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div class="blacklist-domain group relative p-3 flex items-center justify-between">
+                    <span class="font-mono truncate">${domain}</span>
+                    ${isAdmin ? `
+                        <button onclick="removeDomain('${domain}')" 
+                                class="ml-2 text-red-400 hover:text-red-300 transition-opacity"
+                                title="Remove from blacklist">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : ''}
                 </div>
             `).join('');
         }
@@ -1110,6 +1411,11 @@
 
         // Add domain to blacklist
         document.getElementById('addBlacklistBtn').onclick = async () => {
+            if (!isLoggedIn()) {
+                alert('Please log in to manage blacklist');
+                return;
+            }
+
             const input = document.getElementById('newBlacklistDomain');
             const domain = input.value.trim().toLowerCase();
             if (!domain) {
@@ -1124,12 +1430,13 @@
             }
 
             try {
-                const response = await fetch('http://localhost:8080/api/blacklist', {
+                const apiKey = getCurrentApiKey();
+                const response = await fetch(BLACKLIST_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'x-api-key': API_KEYS.admin
+                        'x-api-key': apiKey
                     },
                     body: JSON.stringify({ domain })
                 });
@@ -1141,6 +1448,7 @@
 
                 input.value = '';
                 await loadBlacklist();
+                await updateCurrentBlacklist();
             } catch (error) {
                 console.error('Failed to add domain:', error);
                 alert(`Failed to add domain: ${error.message}`);
@@ -1154,11 +1462,12 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:8080/api/blacklist/${encodeURIComponent(domain)}`, {
+                const apiKey = getCurrentApiKey();
+                const response = await fetch(`${BLACKLIST_ENDPOINT}/${encodeURIComponent(domain)}`, {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json',
-                        'x-api-key': API_KEYS.admin
+                        'x-api-key': apiKey
                     }
                 });
 
@@ -1171,37 +1480,6 @@
             } catch (error) {
                 console.error('Failed to remove domain:', error);
                 alert(`Failed to remove domain: ${error.message}`);
-            }
-        }
-
-        // Add this to your JavaScript
-        async function updateCurrentBlacklist() {
-            try {
-                const response = await fetch('http://localhost:8080/api/blacklist', {
-                    headers: {
-                        'x-api-key': API_KEYS.admin
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const domains = await response.json();
-                const container = document.getElementById('currentBlacklist');
-                
-                if (domains.length === 0) {
-                    container.innerHTML = '<span class="text-gray-500">No domains blacklisted</span>';
-                    return;
-                }
-                
-                container.innerHTML = domains.map(domain => `
-                    <span class="px-2 py-1 bg-red-900/30 border border-red-700 rounded text-sm">
-                        ${domain}
-                    </span>
-                `).join('');
-            } catch (error) {
-                console.error('Failed to load blacklist:', error);
             }
         }
     </script>

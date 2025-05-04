@@ -12,6 +12,7 @@ import { browserManager } from './browserManager';
 import { processWebsite } from './processLinks'; // Import the processWebsite middleware directly
 import processWebsiteRouter from './routes/processWebsite'; // Import our new processWebsite router
 import blacklistRouter from './routes/blacklist';
+import summarizeRouter from './routes/summarize';
 import { RequestQueue } from './utils/requestQueue';
 import metrics from './routes/metrics';
 // Initialize environment variables
@@ -121,12 +122,27 @@ app.post('/api/processLinks', permitAuth, processWebsite);
 // Mount blacklist router with proper error handling
 app.use('/api/blacklist', (req, res, next) => {
     // Check for API key
-    const apiKey = req.headers['x-api-key'];
-    if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
+    const apiKey = req.headers['x-api-key'] as string | undefined;
+    const validKeys = [
+        process.env.ADMIN_API_KEY,
+        process.env.PRO_API_KEY,
+        process.env.FREE_API_KEY
+    ].filter((key): key is string => typeof key === 'string');
+    
+    if (!apiKey || !validKeys.includes(apiKey)) {
         return res.status(401).json({ error: 'Invalid or missing API key' });
     }
+    
+    // For non-GET requests, require admin API key
+    if (req.method !== 'GET' && apiKey !== process.env.ADMIN_API_KEY) {
+        return res.status(403).json({ error: 'Admin access required for this operation' });
+    }
+    
     next();
 }, blacklistRouter);
+
+// Mount text processing router
+app.use('/api/text', summarizeRouter);
 
 // Public routes
 app.use('/metrics', metrics);
