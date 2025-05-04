@@ -14,8 +14,17 @@ import { RequestQueue } from './utils/requestQueue';
 import metrics from './routes/metrics';
 // Initialize environment variables
 dotenv.config();
+import { Permit } from 'permitio';
 
+// Initialize Permit.io SDK (using hosted Cloud PDP by default)
+const permit = new Permit({
+  pdp: 'https://cloudpdp.api.permit.io',  // Explicitly use cloud PDP
+  token: process.env.PERMIT_API_KEY,
+  log: { level: 'debug' },         // uncomment to see SDK internals
+  // throwOnError: true,            // optional: let SDK throw on PDP errors
+});
 // Create logger
+
 const logger = winston.createLogger({
   level: 'debug', // Show ALL logs including debug
   format: winston.format.combine(
@@ -111,33 +120,62 @@ app.use(rateLimiterMiddleware);
 
 // API key middleware
 app.use((req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  const configuredKey = 'sk-953ffa526bf1873a1b5db7e1a64f1131a3bedb867afe06e2b51ef70cd526e52c';
-  
+  const apiKey = req.headers['x-api-key'] as string;
+  // Accept the main SERVICE key plus PRO and FREE test keys
+  const validKeys = [
+    process.env.API_KEY,
+    process.env.PRO_API_KEY,
+    process.env.FREE_API_KEY
+  ];
   // Skip API key check in development mode if configured
   if (process.env.NODE_ENV === 'development' && process.env.SKIP_API_KEY_CHECK === 'true') {
     return next();
   }
   
-  // Require API key in production
-  if (!configuredKey) {
-    logger.error('API key not configured in environment');
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Server configuration error'
-    });
-  }
-  
-  if (!apiKey || apiKey !== configuredKey) {
-    return res.status(401).json({ 
-      success: false, 
-      error: 'Unauthorized - Invalid API key'
-    });
+  if (!apiKey || !validKeys.includes(apiKey)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized - Invalid API key' });
   }
   
   next();
 });
 
+app.use(async (req, res, next) => {
+  if (req.path === '/api/processLinks' && req.method === 'POST') {
+    const apiKey = req.headers['x-api-key'] as string;
+    
+    // Determine user role based on API key type
+    let role = 'free';
+    if (apiKey === process.env.PRO_API_KEY) {
+      role = 'pro';
+    } else if (apiKey === process.env.API_KEY) {
+      role = 'service';
+    }
+
+    // Minimal user info for cloud PDP
+    const user = {
+      key: apiKey,
+      email: 'john@company.com'
+    };
+
+    // Sync user first
+    await permit.api.syncUser(user);
+    
+    // Then check permissions
+    let allowed = false;
+    try {
+      allowed = await permit.check(user, 'read', 'website');
+      logger.debug(`Permission check result: ${allowed}`);
+    } catch (err) {
+      logger.error('Permit PDP connection error:', err);
+      return res.status(500).json({ success: false, error: 'Authorization service unavailable' });
+    }
+
+    if (!allowed) {
+      return res.status(403).json({ success: false, error: 'Access denied by policy' });
+    }
+  }
+  next();
+});
 // Apply process website middleware directly instead of using a router
 app.use(processWebsite);
 
