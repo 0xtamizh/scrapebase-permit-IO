@@ -336,7 +336,7 @@ class BrowserManager extends EventEmitter {
       
       this.browser = await chromium.launch({
         headless: true,
-        //executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser',
+        executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser',
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
