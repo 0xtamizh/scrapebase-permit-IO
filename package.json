@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/public && cp index.html dist/ && cp -r public/* dist/public/ || true",
     "watch": "tsc -w",
     "test": "playwright test",
     "test:ci": "playwright test --config=playwright.config.ts",
-    "postinstall": "",
+    "postinstall": "npm run build",
     "audit:fix": "npm audit fix"
   },
   "devDependencies": {

@@ -54,8 +54,13 @@ export const requestQueue = new RequestQueue(
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Serve static files from root directory
-app.use(express.static(process.cwd()));
+// Determine the static file directory based on environment
+const staticDir = process.env.NODE_ENV === 'production' ? 'dist' : '.';
+const publicDir = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
+
+// Serve static files
+app.use(express.static(staticDir));
+app.use('/public', express.static(publicDir));
 
 // Apply middleware
 app.use(cors({
@@ -155,7 +160,7 @@ app.use('/process', processWebsiteRouter);
 
 // Catch-all route to serve index.html
 app.get('*', (req, res) => {
-    res.sendFile('index.html', { root: process.cwd() });
+    res.sendFile('index.html', { root: staticDir });
 });
 
 // Error handling middleware
