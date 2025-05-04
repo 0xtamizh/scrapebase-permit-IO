@@ -1,470 +1,863 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrapebase Test</title>
+    <title>Scrapebase - Advanced Web Scraping Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/marked/marked.min.js" rel="stylesheet">
     <style>
+        :root {
+            --dark-bg: #0d1117;
+            --dark-surface: #161b22;
+            --dark-input: #21262d;
+            --dark-border: #30363d;
+            --dark-text: #c9d1d9;
+            --dark-heading: #ffffff;
+            --dark-primary: #238636;
+            --dark-primary-hover: #2ea043;
+            --dark-secondary: #1f6feb;
+            --dark-secondary-hover: #388bfd;
+        }
+
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            max-width: 800px;
-            margin: 40px auto;
-            background-color: #f8f9fa;
-            color: #212529;
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
         }
-        .container {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            border: 1px solid #dee2e6;
+
+        .dark-card {
+            background-color: var(--dark-surface);
+            border: 1px solid var(--dark-border);
+            border-radius: 6px;
         }
-        h1, h2 {
-            color: #343a40;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+
+        .dark-input {
+            background-color: var(--dark-input);
+            border: 1px solid var(--dark-border);
+            color: var(--dark-text);
         }
-        h1 {
-            font-size: 1.8em;
+
+        .dark-input:focus {
+            border-color: var(--dark-secondary);
+            outline: none;
         }
-        h2 {
-            font-size: 1.4em;
-            margin-top: 30px;
-        }
-        form div {
-            margin-bottom: 20px;
-        }
-        form label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #495057;
-        }
-        form select, form button {
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 1rem;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
         }
-        form select {
-             background-color: #fff; /* Ensure select background is white */
-             appearance: none; /* Optional: for custom arrow styling later */
-             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007bff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-             background-repeat: no-repeat;
-             background-position: right 1rem center;
-             background-size: 0.65em auto;
-             padding-right: 2.5rem; /* Make space for arrow */
+
+        .modal-content {
+            background-color: var(--dark-surface);
+            color: var(--dark-text);
+            border: 1px solid var(--dark-border);
+            border-radius: 8px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
-        form button {
-            background-color: #007bff;
-            color: white;
-            border: none;
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin: 0 1rem;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
             cursor: pointer;
-            transition: background-color 0.2s ease, opacity 0.2s ease;
-            font-weight: 500;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--dark-border);
+            transition: .4s;
+            border-radius: 34px;
         }
-        form button:hover {
-            background-color: #0056b3;
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
         }
-        form button:disabled {
-            background-color: #6c757d;
+
+        input:checked + .toggle-slider {
+            background-color: var(--dark-primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--dark-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--dark-primary-hover);
+        }
+
+        .btn-primary:disabled {
             opacity: 0.7;
             cursor: not-allowed;
         }
-        #message-area {
-            margin-top: 20px;
-            margin-bottom: 20px; /* Add margin below */
-            padding: 12px 15px;
+
+        /* Copy button */
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.5rem;
+            background: var(--dark-surface);
+            border: 1px solid var(--dark-border);
             border-radius: 4px;
-            display: none; /* Hidden by default */
-            border: 1px solid transparent;
-            font-size: 0.95em;
+            color: var(--dark-text);
+            cursor: pointer;
         }
-        #message-area.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-            display: block;
+
+        .copy-btn:hover {
+            background: var(--dark-border);
         }
-        #message-area.success { /* Added for potential future use */
-             background-color: #d4edda;
-             color: #155724;
-             border-color: #c3e6cb;
-             display: block;
-        }
-        #result {
-            margin-top: 25px;
-            padding: 20px;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            background-color: #f8f9fa;
-        }
-        #result.success-border {
-            border-left: 5px solid #28a745;
-        }
-        #result.error-border {
-            border-left: 5px solid #dc3545;
-        }
-        #result h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-            color: #495057;
-        }
-         #result p {
-            margin-bottom: 10px;
-            color: #495057;
-         }
-         #result strong {
-            color: #343a40;
-         }
-        #result pre {
-            background-color: #e9ecef;
-            padding: 15px;
-            border-radius: 4px;
-            max-height: 250px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: #495057;
-            font-size: 0.9em;
-            border: 1px solid #ced4da;
-        }
-        .status {
-            font-weight: bold;
-            padding: 6px 12px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            text-transform: uppercase;
-        }
-        .status-success {
-            background-color: #28a745;
-            color: white;
-        }
-        .status-failed {
-            background-color: #dc3545;
-            color: white;
-        }
-        .error-message {
-            color: #721c24;
-            font-weight: bold;
-        }
-        hr {
-            margin: 40px 0;
-            border: 0;
-            border-top: 1px solid #dee2e6;
-        }
-        .instructions ul {
-            list-style: none;
-            padding: 0;
-        }
-        .instructions li {
-            margin-bottom: 12px;
-            padding-left: 25px;
+
+        /* Code blocks */
+        .code-container {
             position: relative;
+            background: var(--dark-bg);
+            border: 1px solid var(--dark-border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
         }
-        .instructions li::before {
-            content: "✓"; /* Check mark */
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hero section */
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step-container {
+            counter-reset: step;
+        }
+
+        .step {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
             position: absolute;
             left: 0;
-            color: #007bff;
+            top: 0;
+            width: 2rem;
+            height: 2rem;
+            background: var(--dark-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-weight: bold;
-            font-size: 1.1em;
         }
-        .note {
-            color: #6c757d;
-            font-size: 0.9em;
-            margin-top: 15px;
-            background-color: #e9ecef;
-            padding: 10px;
-            border-radius: 4px;
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0;
+            position: relative;
         }
-        .warning {
-             background-color: #fff3cd;
-             color: #856404;
-             padding: 15px;
-             border: 1px solid #ffeeba;
-             border-radius: 4px;
-             margin-bottom: 20px;
-             font-size: 0.9em;
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            padding: 0 1rem;
         }
-        .warning strong {
-             color: #856404;
+
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 2px;
+            background: var(--dark-border);
+            z-index: 1;
+        }
+
+        .progress-step:first-child::before {
+            width: 50%;
+            left: 50%;
+        }
+
+        .progress-step:last-child::before {
+            width: 50%;
+        }
+
+        .step-number {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--dark-surface);
+            border: 2px solid var(--dark-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-active .step-number {
+            background: var(--dark-primary);
+            border-color: var(--dark-primary);
+        }
+
+        /* Example Domain Buttons */
+        .domain-btn {
+            background: var(--dark-surface);
+            border: 1px solid var(--dark-border);
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .domain-btn:hover {
+            border-color: var(--dark-secondary);
+            background: var(--dark-input);
+        }
+
+        .domain-btn::after {
+            content: 'Click to scrape';
+            position: absolute;
+            bottom: -2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .domain-btn:hover::after {
+            bottom: 0.25rem;
+            opacity: 1;
+        }
+
+        /* Feature List */
+        .feature-list {
+            background: var(--dark-surface);
+            border: 1px solid var(--dark-border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .feature-item i {
+            color: var(--dark-primary);
+        }
+
+        /* Blacklist Domain */
+        .blacklist-domain {
+            background: #3a1d1d;
+            border: 1px solid #5c2626;
+            color: #ff9494;
+            border-radius: 1rem;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .blacklist-domain:hover {
+            background: #4a2424;
+        }
+
+        /* Result Toggle */
+        .result-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .result-toggle button {
+            background: var(--dark-surface);
+            border: 1px solid var(--dark-border);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .result-toggle button.active {
+            background: var(--dark-primary);
+            border-color: var(--dark-primary);
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Scrapebase Authorization Demo</h1>
-        <p>Test the scraping API with different user roles and permissions.</p>
-
-        <!-- ********************************************************** -->
-        <!-- SECURITY WARNING                                           -->
-        <!-- ********************************************************** -->
-        <div class="warning">
-            <strong>Warning:</strong> API keys are included directly in this file's source code for demonstration purposes. Do not deploy this file publicly with real, sensitive API keys. In a production environment, API keys should be handled securely on the server-side or via environment variables during a build process.
+<body class="min-h-screen">
+    <!-- Top Navigation -->
+    <nav class="bg-dark-surface border-b border-dark-border p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-white">Scrapebase</h1>
+            <div class="flex items-center gap-4">
+                <span id="userTier" class="text-sm font-medium"></span>
+                <button id="logoutBtn" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
         </div>
-        <!-- ********************************************************** -->
+    </nav>
 
-        <form id="scrapeForm">
-            <div>
-                <label for="apiKey">User Role</label>
-                <select id="apiKey" name="apiKey"></select>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6 text-center text-white">Welcome to Scrapebase</h2>
+            
+            <div class="toggle-container mb-8">
+                <span class="text-lg">User</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="modeToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="text-lg">Admin</span>
             </div>
 
-            <div>
-                <label for="url">Target URL</label>
-                <select id="url" name="url"></select>
+            <div id="credentialsSection" class="mb-6">
+                <div id="userCreds" class="dark-card p-4 mb-4 relative">
+                    <p class="font-bold mb-2">User Credentials:</p>
+                    <code class="block text-sm">
+                        username: newuser<br>
+                        password: 2025DEVChallenge
+                    </code>
+                    <button class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                            onclick="pasteCredentials('user')">
+                        <i class="fas fa-paste"></i>
+                    </button>
+                </div>
+                <div id="adminCreds" class="dark-card p-4 relative" style="display: none;">
+                    <p class="font-bold mb-2">Admin Credentials:</p>
+                    <code class="block text-sm">
+                        username: admin<br>
+                        password: 2025DEVChallenge
+                    </code>
+                    <button class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                            onclick="pasteCredentials('admin')">
+                        <i class="fas fa-paste"></i>
+                    </button>
+                </div>
             </div>
 
-            <div>
-                <label for="mode">Scraping Mode</label>
-                <select id="mode" name="mode">
-                    <option value="basic">Basic (Free Users)</option>
-                    <option value="advanced">Advanced (Pro Users)</option>
-                </select>
-            </div>
-
-            <button type="submit" id="submitButton">Test Scrape</button>
-        </form>
-
-        <div id="message-area"></div> <!-- Area for general status/error messages -->
-        <div id="result" style="display: none;"></div> <!-- Area for detailed results -->
-
-        <hr>
-
-        <div class="instructions">
-            <h2>Testing Instructions</h2>
-            <ul>
-                <li>Select a user role:
-                    <ul>
-                        <li><strong>Admin (2025DEVChallenge_admin)</strong>: Full access to all features</li>
-                        <li><strong>Regular User (2025DEVChallenge_user)</strong>: Limited to basic scraping</li>
-                    </ul>
-                </li>
-                <li>Choose a target URL:
-                    <ul>
-                        <li><strong>Basic Website</strong>: Accessible to all users</li>
-                        <li><strong>Premium Site</strong>: Requires Pro/Admin access</li>
-                        <li><strong>Complex Sites</strong>: Tests advanced scraping features</li>
-                    </ul>
-                </li>
-                <li>Select scraping mode:
-                    <ul>
-                        <li><strong>Basic</strong>: Simple content extraction (Free users)</li>
-                        <li><strong>Advanced</strong>: Full HTML and JavaScript rendering (Pro/Admin only)</li>
-                    </ul>
-                </li>
-                <li>Click "Test Scrape" to see authorization in action!</li>
-            </ul>
-            <p class="note">
-                <strong>Authorization Features:</strong><br>
-                • Role-based access control (Free vs Pro vs Admin)<br>
-                • Resource-based permissions (Premium domains)<br>
-                • Action-based control (Basic vs Advanced scraping)<br>
-                • Rate limiting per user tier
-            </p>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="username" class="w-full p-2 dark-input rounded">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="password" class="w-full p-2 dark-input rounded">
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Login</button>
+            </form>
         </div>
     </div>
 
-    <script>
-        // --- Configuration ---
-        const API_ENDPOINT = 'http://localhost:8080/api/processLinks'; // Updated to correct port
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Progress Steps -->
+        <div class="progress-steps mb-12">
+            <div class="progress-step step-active">
+                <div class="step-number">1</div>
+                <div class="step-label">Choose Plan</div>
+            </div>
+            <div class="progress-step">
+                <div class="step-number">2</div>
+                <div class="step-label">Select Domain</div>
+            </div>
+            <div class="progress-step">
+                <div class="step-number">3</div>
+                <div class="step-label">Configure</div>
+            </div>
+            <div class="progress-step">
+                <div class="step-number">4</div>
+                <div class="step-label">Results</div>
+            </div>
+        </div>
 
-        const TEST_CREDENTIALS = {
-          admin: {
-            // WARNING: Hardcoded key for local testing ONLY. See warning above.
-            apiKey: '2025DEVChallenge_admin',
-            label: 'Admin User',
-          },
-          pro: {
-            // WARNING: Hardcoded key for local testing ONLY. See warning above.
-            apiKey: '2025DEVChallenge_pro',
-            label: 'Pro User',
-          },
-          free: {
-            // WARNING: Hardcoded key for local testing ONLY. See warning above.
-            apiKey: '2025DEVChallenge_free',
-            label: 'Free User',
-          }
+        <!-- Main Interface -->
+        <div class="max-w-4xl mx-auto">
+            <!-- Plan Selection -->
+            <div class="toggle-container mb-8">
+                <span class="text-lg">Basic Plan</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="planToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="text-lg">Pro Plan</span>
+            </div>
+
+            <!-- Feature Comparison -->
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="feature-list">
+                    <h3 class="text-lg font-bold mb-4">Basic Features</h3>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Basic content scraping</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Public domains only</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Raw content view</span>
+                    </div>
+                </div>
+                <div class="feature-list">
+                    <h3 class="text-lg font-bold mb-4">Pro Features</h3>
+                    <div class="feature-item">
+                        <i class="fas fa-star"></i>
+                        <span>Advanced scraping</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-star"></i>
+                        <span>Content cleaning</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-star"></i>
+                        <span>Markdown rendering</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domain Selection -->
+            <div class="dark-card p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">Select Domain</h3>
+                <p class="text-sm mb-4">Click any example domain to instantly scrape, or enter your own:</p>
+                
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <button class="domain-btn" data-domain="example.com">
+                        example.com
+                        <small class="block text-gray-400">Demo site</small>
+                    </button>
+                    <button class="domain-btn" data-domain="news.ycombinator.com">
+                        news.ycombinator.com
+                        <small class="block text-gray-400">Tech news</small>
+                    </button>
+                    <button class="domain-btn" data-domain="dev.to">
+                        dev.to
+                        <small class="block text-gray-400">Developer blog</small>
+                    </button>
+                    <button class="domain-btn" data-domain="github.com">
+                        github.com
+                        <small class="block text-gray-400">Code hosting</small>
+                    </button>
+                    <button class="domain-btn" data-domain="stackoverflow.com">
+                        stackoverflow.com
+                        <small class="block text-gray-400">Q&A site</small>
+                    </button>
+                    <button class="domain-btn" data-domain="medium.com">
+                        medium.com
+                        <small class="block text-gray-400">Blog platform</small>
+                    </button>
+                </div>
+
+                <input type="text" id="customDomain" 
+                       placeholder="Or enter custom domain..." 
+                       class="w-full p-3 dark-input rounded">
+
+                <div class="mt-4">
+                    <p class="text-sm text-gray-400 mb-2">Blacklisted domains (cannot be scraped):</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="blacklist-domain">facebook.com</span>
+                        <span class="blacklist-domain">twitter.com</span>
+                        <span class="blacklist-domain">instagram.com</span>
+                        <span class="blacklist-domain">linkedin.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Features -->
+            <div id="proFeatures" class="dark-card p-6 mb-6" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">Pro Features</h3>
+                <div class="space-y-4">
+                    <label class="flex items-center space-x-3">
+                        <input type="checkbox" id="cleanContent" class="form-checkbox">
+                        <span>Clean Content</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Scrape Button -->
+            <button id="scrapeBtn" class="btn btn-primary w-full mb-6">
+                <span id="scrapeBtnText">Start Scraping</span>
+                <span id="scrapeSpinner" class="spinner" style="display: none;"></span>
+            </button>
+
+            <!-- Results Area -->
+            <div id="results" class="dark-card p-6" style="display: none;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Results</h3>
+                    <button id="copyBtn" class="btn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+
+                <div class="result-toggle">
+                    <button id="rawBtn" class="active">Raw Content</button>
+                    <button id="renderedBtn">Rendered</button>
+                </div>
+
+                <div id="resultsContent" class="code-container">
+                    <!-- Results will be inserted here -->
+                </div>
+                <div id="renderedContent" class="prose prose-invert max-w-none mt-6" style="display: none;">
+                    <!-- Rendered content will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Interface -->
+        <div id="adminInterface" class="max-w-4xl mx-auto mt-8" style="display: none;">
+            <div class="dark-card p-6">
+                <h3 class="text-xl font-bold mb-4">Blacklist Management</h3>
+                <div class="flex gap-4 mb-4">
+                    <input type="text" id="newBlacklistDomain" 
+                           placeholder="Enter domain to blacklist..." 
+                           class="flex-1 p-3 dark-input rounded">
+                    <button id="addBlacklistBtn" class="btn btn-primary">
+                        Add to Blacklist
+                    </button>
+                </div>
+                <div id="blacklistContainer" class="flex flex-wrap gap-2">
+                    <!-- Blacklisted domains will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Configuration
+        const API_ENDPOINT = 'http://localhost:8080/api/processLinks';
+        const BLACKLIST_ENDPOINT = 'http://localhost:8080/api/blacklist';
+        
+        const API_KEYS = {
+            free: '2025DEVChallenge_free',
+            pro: '2025DEVChallenge_pro',
+            admin: '2025DEVChallenge_admin'
         };
 
-        const TEST_URLS = [
-          { url: 'https://example.com', label: 'Basic Website (Free)' },
-          { url: 'https://premium-site1.com', label: 'Premium Site (Pro Only)' },
-          { url: 'https://news.ycombinator.com', label: 'Hacker News (Complex)' },
-          { url: 'https://dev.to', label: 'Dev.to (JavaScript Heavy)' },
-          { url: 'https://github.com', label: 'GitHub (Rate Limited)' }
-        ];
+        // DOM Elements
+        const loginModal = document.getElementById('loginModal');
+        const loginForm = document.getElementById('loginForm');
+        const modeToggle = document.getElementById('modeToggle');
+        const userCreds = document.getElementById('userCreds');
+        const adminCreds = document.getElementById('adminCreds');
+        const planToggle = document.getElementById('planToggle');
+        const proFeatures = document.getElementById('proFeatures');
+        const userTier = document.getElementById('userTier');
+        const scrapeBtn = document.getElementById('scrapeBtn');
+        const scrapeBtnText = document.getElementById('scrapeBtnText');
+        const scrapeSpinner = document.getElementById('scrapeSpinner');
+        const results = document.getElementById('results');
+        const resultsContent = document.getElementById('resultsContent');
+        const renderedContent = document.getElementById('renderedContent');
+        const copyBtn = document.getElementById('copyBtn');
+        const rawBtn = document.getElementById('rawBtn');
+        const renderedBtn = document.getElementById('renderedBtn');
+        const adminInterface = document.getElementById('adminInterface');
 
-        // --- DOM Elements ---
-        const apiKeySelect = document.getElementById('apiKey');
-        const urlSelect = document.getElementById('url');
-        const modeSelect = document.getElementById('mode');
-        const form = document.getElementById('scrapeForm');
-        const submitButton = document.getElementById('submitButton');
-        const resultDiv = document.getElementById('result');
-        const messageArea = document.getElementById('message-area');
+        // Show login modal on load
+        window.onload = () => {
+            loginModal.style.display = 'block';
+        };
 
-        // --- Initialization ---
-        function initializeForm() {
-            // Populate User Role dropdown
-            apiKeySelect.innerHTML = ''; // Clear existing options
-            Object.entries(TEST_CREDENTIALS).forEach(([key, { apiKey, label }]) => {
-                const option = document.createElement('option');
-                option.value = apiKey;
-                option.textContent = label;
-                apiKeySelect.appendChild(option);
-            });
-            // Default to Free User
-            if (TEST_CREDENTIALS.free) {
-                apiKeySelect.value = TEST_CREDENTIALS.free.apiKey;
+        // Handle mode toggle
+        modeToggle.onchange = () => {
+            // Toggle credentials visibility
+            userCreds.style.display = modeToggle.checked ? 'none' : 'block';
+            adminCreds.style.display = modeToggle.checked ? 'block' : 'none';
+            
+            // Load blacklist if in admin mode
+            if (modeToggle.checked) {
+                loadBlacklist();
             }
+        };
 
-            // Populate Target URL dropdown
-            urlSelect.innerHTML = ''; // Clear existing options
-            TEST_URLS.forEach(({ url, label }) => {
-                const option = document.createElement('option');
-                option.value = url;
-                option.textContent = `${label} - ${url}`;
-                urlSelect.appendChild(option);
-            });
-            // Default to first URL
-            if (TEST_URLS.length > 0) {
-                urlSelect.value = TEST_URLS[0].url;
+        // Paste credentials
+        function pasteCredentials(type) {
+            if (type === 'user') {
+                document.getElementById('username').value = 'newuser';
+                document.getElementById('password').value = '2025DEVChallenge';
+            } else {
+                document.getElementById('username').value = 'admin';
+                document.getElementById('password').value = '2025DEVChallenge';
             }
-
-             // Add form submit listener
-            form.addEventListener('submit', handleFormSubmit);
         }
 
-        // --- Event Handlers ---
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            setLoadingState(true);
-            clearPreviousResults();
+        // Handle login
+        loginForm.onsubmit = (e) => {
+            e.preventDefault();
+            loginModal.style.display = 'none';
+            const isAdmin = modeToggle.checked;
+            userTier.textContent = isAdmin ? 'Admin Mode' : 'User Mode';
+            adminInterface.style.display = isAdmin ? 'block' : 'none';
+        };
 
-            const selectedApiKey = apiKeySelect.value;
-            const selectedUrl = urlSelect.value;
-            const isAdvanced = modeSelect.value === 'advanced';
+        // Handle plan toggle
+        planToggle.onchange = () => {
+            proFeatures.style.display = planToggle.checked ? 'block' : 'none';
+            updateProgressSteps(1);
+        };
 
+        // Handle domain buttons
+        document.querySelectorAll('.domain-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.getElementById('customDomain').value = btn.dataset.domain;
+                updateProgressSteps(2);
+                scrapeBtn.click(); // Auto-trigger scrape
+            };
+        });
+
+        // Handle result view toggle
+        rawBtn.onclick = () => {
+            rawBtn.classList.add('active');
+            renderedBtn.classList.remove('active');
+            resultsContent.style.display = 'block';
+            renderedContent.style.display = 'none';
+        };
+
+        renderedBtn.onclick = () => {
+            renderedBtn.classList.add('active');
+            rawBtn.classList.remove('active');
+            resultsContent.style.display = 'none';
+            renderedContent.style.display = 'block';
+            // Render markdown
+            const content = resultsContent.querySelector('pre').innerText;
+            renderedContent.innerHTML = marked.parse(content);
+        };
+
+        // Update progress steps
+        function updateProgressSteps(step) {
+            document.querySelectorAll('.progress-step').forEach((el, index) => {
+                if (index < step) {
+                    el.classList.add('step-active');
+                } else {
+                    el.classList.remove('step-active');
+                }
+            });
+        }
+
+        // Handle scrape button
+        scrapeBtn.onclick = async () => {
+            const domain = document.getElementById('customDomain').value;
+            if (!domain) return;
+
+            updateProgressSteps(3);
+            scrapeBtn.disabled = true;
+            scrapeBtnText.textContent = 'Scraping...';
+            scrapeSpinner.style.display = 'inline-block';
+            
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': selectedApiKey, // Send the selected API key
+                        'x-api-key': planToggle.checked ? API_KEYS.pro : API_KEYS.free
                     },
                     body: JSON.stringify({
-                        url: selectedUrl,
-                        advanced: isAdvanced,
-                    }),
+                        url: `https://${domain}`,
+                        advanced: planToggle.checked
+                    })
                 });
 
-                // Check if response is ok (status in the range 200-299)
-                if (!response.ok) {
-                    // Try to parse error from response body, otherwise use status text
-                    let errorMsg = `HTTP error! Status: ${response.status} ${response.statusText}`;
-                    try {
-                        const errorData = await response.json();
-                        errorMsg = errorData.error || errorData.message || JSON.stringify(errorData);
-                    } catch (parseError) {
-                        // Ignore if body isn't JSON or empty
-                    }
-                     throw new Error(errorMsg); // Throw to be caught by the catch block
-                }
+                const data = await response.json();
+                
+                results.style.display = 'block';
+                updateProgressSteps(4);
 
-                const data = await response.json(); // Assuming successful responses are JSON
-                displayResults(data);
-
-                // Show a top-level message based on success/failure
-                if (!data.success && data.error) {
-                     showMessage(`Request failed: ${data.error}`, 'error');
-                } else if (!data.success) {
-                     showMessage('Request failed for an unknown reason.', 'error');
+                if (data.success) {
+                    resultsContent.innerHTML = `<pre class="whitespace-pre-wrap">${data.content}</pre>`;
+                    renderedBtn.style.display = planToggle.checked ? 'block' : 'none';
                 } else {
-                    // Optionally show a success message
-                    // showMessage('Scrape successful!', 'success');
+                    resultsContent.innerHTML = `<div class="text-red-500">Error: ${data.error || 'Unknown error'}</div>`;
                 }
-
             } catch (error) {
-                console.error('API Request Error:', error);
-                // Display network errors or errors thrown from response check
-                showMessage(`Error: ${error.message || 'Failed to fetch. Check network or server status.'}`, 'error');
-                resultDiv.style.display = 'none'; // Hide result area on critical error
+                results.style.display = 'block';
+                resultsContent.innerHTML = `<div class="text-red-500">Error: ${error.message}</div>`;
             } finally {
-                setLoadingState(false);
+                scrapeBtn.disabled = false;
+                scrapeBtnText.textContent = 'Start Scraping';
+                scrapeSpinner.style.display = 'none';
+            }
+        };
+
+        // Handle copy button
+        copyBtn.onclick = () => {
+            const content = resultsContent.innerText;
+            navigator.clipboard.writeText(content);
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            }, 2000);
+        };
+
+        // Handle logout
+        document.getElementById('logoutBtn').onclick = () => {
+            loginModal.style.display = 'block';
+            results.style.display = 'none';
+            loginForm.reset();
+            planToggle.checked = false;
+            proFeatures.style.display = 'none';
+            renderedContent.style.display = 'none';
+            modeToggle.checked = false;
+            userCreds.style.display = 'block';
+            adminCreds.style.display = 'none';
+            adminInterface.style.display = 'none';
+            updateProgressSteps(1);
+        };
+
+        // Admin Blacklist Management
+        const blacklistInput = document.getElementById('newBlacklistDomain');
+        const addBlacklistBtn = document.getElementById('addBlacklistBtn');
+        const blacklistContainer = document.getElementById('blacklistContainer');
+
+        // Load blacklist
+        async function loadBlacklist() {
+            try {
+                const response = await fetch(BLACKLIST_ENDPOINT);
+                const domains = await response.json();
+                updateBlacklistUI(domains);
+            } catch (error) {
+                console.error('Failed to load blacklist:', error);
             }
         }
 
-        // --- UI Update Functions ---
-        function setLoadingState(isLoading) {
-            submitButton.disabled = isLoading;
-            submitButton.textContent = isLoading ? 'Scraping...' : 'Test Scrape';
-            form.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+        // Update blacklist UI
+        function updateBlacklistUI(domains) {
+            blacklistContainer.innerHTML = domains.map(domain => `
+                <div class="blacklist-domain">
+                    ${domain}
+                    <button onclick="removeDomain('${domain}')" class="ml-2 text-red-400 hover:text-red-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
         }
 
-        function clearPreviousResults() {
-            resultDiv.style.display = 'none';
-            resultDiv.innerHTML = '';
-            resultDiv.className = ''; // Reset result styling classes
-            messageArea.style.display = 'none';
-            messageArea.textContent = '';
-            messageArea.className = 'message-area'; // Reset message styling classes
-        }
+        // Add domain to blacklist
+        addBlacklistBtn.onclick = async () => {
+            const domain = blacklistInput.value.trim();
+            if (!domain) return;
 
-        function displayResults(data) {
-            resultDiv.style.display = 'block';
-            resultDiv.classList.add(data.success ? 'success-border' : 'error-border');
+            try {
+                const response = await fetch(BLACKLIST_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domain })
+                });
 
-            let resultHTML = `<span class="status ${data.success ? 'status-success' : 'status-failed'}">${data.success ? 'Success' : 'Failed'}</span>`;
-
-            if (data.error) {
-                resultHTML += `<div><h3>Error Details</h3><p class="error-message">${escapeHTML(data.error)}</p></div>`;
+                if (response.ok) {
+                    blacklistInput.value = '';
+                    loadBlacklist();
+                }
+            } catch (error) {
+                console.error('Failed to add domain:', error);
             }
+        };
 
-            if (data.details) {
-                resultHTML += `<div><h3>Details</h3><p>${escapeHTML(data.details)}</p></div>`;
+        // Remove domain from blacklist
+        async function removeDomain(domain) {
+            try {
+                const response = await fetch(`${BLACKLIST_ENDPOINT}/${domain}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadBlacklist();
+                }
+            } catch (error) {
+                console.error('Failed to remove domain:', error);
             }
-
-            if (data.content) {
-                resultHTML += `
-                    <div>
-                        <h3>Content Preview (first 500 chars)</h3>
-                        <pre>${escapeHTML(data.content.substring(0, 500))}${data.content.length > 500 ? '...' : ''}</pre>
-                    </div>
-                `;
-            } else if (data.success && !data.content) {
-                 resultHTML += `<p><em>No content returned.</em></p>`;
-            }
-
-            resultDiv.innerHTML = resultHTML;
         }
-
-        function showMessage(message, type = 'error') { // Default to error for messages
-             messageArea.textContent = message;
-             messageArea.className = `message-area ${type}`; // type should be 'error', 'success'
-             messageArea.style.display = 'block';
-        }
-
-        // --- Utility Functions ---
-        function escapeHTML(str) {
-            if (typeof str !== 'string') return str; // Return non-strings as is
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML; // Use browser's built-in escaping
-        }
-
-        // --- Run Initialization ---
-        document.addEventListener('DOMContentLoaded', initializeForm);
-
     </script>
 </body>
 </html>
