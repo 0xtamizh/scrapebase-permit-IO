@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import winston from 'winston';
 import process from 'process';
 import rateLimiterMiddleware from './middleware/rateLimiter';
+import { permitAuth } from './middleware/permitAuth';
 import { browserManager } from './browserManager';
 import { processWebsite } from './processLinks'; // Import the processWebsite middleware directly
 import processWebsiteRouter from './routes/processWebsite'; // Import our new processWebsite router
@@ -14,17 +15,8 @@ import { RequestQueue } from './utils/requestQueue';
 import metrics from './routes/metrics';
 // Initialize environment variables
 dotenv.config();
-import { Permit } from 'permitio';
 
-// Initialize Permit.io SDK (using hosted Cloud PDP by default)
-const permit = new Permit({
-  pdp: 'https://cloudpdp.api.permit.io',  // Explicitly use cloud PDP
-  token: process.env.PERMIT_API_KEY,
-  log: { level: 'debug' },         // uncomment to see SDK internals
-  // throwOnError: true,            // optional: let SDK throw on PDP errors
-});
 // Create logger
-
 const logger = winston.createLogger({
   level: 'debug', // Show ALL logs including debug
   format: winston.format.combine(
@@ -61,7 +53,11 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 // Apply middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://127.0.0.1:5500', 'http://localhost:5500'],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'x-api-key']
+}));
 // app.use(helmet());
 app.use(express.json());
 
@@ -118,76 +114,12 @@ app.use((req, res, next) => {
 // Apply rate limiter
 app.use(rateLimiterMiddleware);
 
-// API key middleware
-app.use((req, res, next) => {
-  const apiKey = req.headers['x-api-key'] as string;
-  // Accept the main SERVICE key plus PRO and FREE test keys
-  const validKeys = [
-    process.env.API_KEY,
-    process.env.PRO_API_KEY,
-    process.env.FREE_API_KEY
-  ];
-  // Skip API key check in development mode if configured
-  if (process.env.NODE_ENV === 'development' && process.env.SKIP_API_KEY_CHECK === 'true') {
-    return next();
-  }
-  
-  if (!apiKey || !validKeys.includes(apiKey)) {
-    return res.status(401).json({ success: false, error: 'Unauthorized - Invalid API key' });
-  }
-  
-  next();
-});
+// Protected routes with Permit.io authorization
+app.post('/api/processLinks', permitAuth, processWebsite);
 
-app.use(async (req, res, next) => {
-  if (req.path === '/api/processLinks' && req.method === 'POST') {
-    const apiKey = req.headers['x-api-key'] as string;
-    
-    // Determine user role based on API key type
-    let role = 'free';
-    if (apiKey === process.env.PRO_API_KEY) {
-      role = 'pro';
-    } else if (apiKey === process.env.API_KEY) {
-      role = 'service';
-    }
-
-    // Minimal user info for cloud PDP
-    const user = {
-      key: apiKey,
-      email: 'john@company.com'
-    };
-
-    try {
-      // Sync user with Permit.io
-      await permit.api.syncUser(user);
-      
-      // Check if user has permission to read website content
-      const allowed = await permit.check(user, 'read', 'website');
-      
-      if (!allowed) {
-        logger.warn(`Access denied for user ${user.key} - insufficient permissions`);
-        return res.status(403).json({ 
-          success: false, 
-          error: 'Access denied - You need appropriate permissions to scrape websites' 
-        });
-      }
-
-      // If we get here, user is authorized
-      logger.info(`User ${user.key} authorized to process website`);
-      
-      // Continue with the rest of the request processing...
-    } catch (err) {
-      logger.error('Permit PDP connection error:', err);
-      return res.status(500).json({ success: false, error: 'Authorization service unavailable' });
-    }
-  }
-  next();
-});
-// Apply process website middleware directly instead of using a router
-app.use(processWebsite);
-
-// Apply our new processWebsite router
-app.use(processWebsiteRouter);
+// Public routes
+app.use('/metrics', metrics);
+app.use('/process', processWebsiteRouter);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -198,25 +130,21 @@ app.get('/health', async (req, res) => {
   const uptime = process.uptime();
   
   res.json({
-    status: 'ok',
-    uptime,
-    memoryUsage: {
-      rss: Math.round(memoryUsage.rss / 1024 / 1024),
-      heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
-      heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-      external: Math.round(memoryUsage.external / 1024 / 1024)
-    },
+    status: 'healthy',
     browser: browserStatus,
-    queue: queueStatus
+    queue: queueStatus,
+    memory: {
+      heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024) + 'MB',
+      heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + 'MB',
+      rss: Math.round(memoryUsage.rss / 1024 / 1024) + 'MB'
+    },
+    uptime: Math.round(uptime / 60) + ' minutes'
   });
 });
 
-app.use('/metrics', metrics);
-
-
 // Start server
 const server = app.listen(port, () => {
-  logger.info(`Server started on port ${port}`);
+  logger.info(`Server is running on port ${port}`);
 });
 
 // Graceful shutdown

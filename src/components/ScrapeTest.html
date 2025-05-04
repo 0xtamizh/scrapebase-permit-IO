@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrapebase Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border: 1px solid #dee2e6;
+        }
+        h1, h2 {
+            color: #343a40;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 1.8em;
+        }
+        h2 {
+            font-size: 1.4em;
+            margin-top: 30px;
+        }
+        form div {
+            margin-bottom: 20px;
+        }
+        form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        form select, form button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        form select {
+             background-color: #fff; /* Ensure select background is white */
+             appearance: none; /* Optional: for custom arrow styling later */
+             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007bff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+             background-repeat: no-repeat;
+             background-position: right 1rem center;
+             background-size: 0.65em auto;
+             padding-right: 2.5rem; /* Make space for arrow */
+        }
+        form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            font-weight: 500;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+        form button:disabled {
+            background-color: #6c757d;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        #message-area {
+            margin-top: 20px;
+            margin-bottom: 20px; /* Add margin below */
+            padding: 12px 15px;
+            border-radius: 4px;
+            display: none; /* Hidden by default */
+            border: 1px solid transparent;
+            font-size: 0.95em;
+        }
+        #message-area.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+            display: block;
+        }
+        #message-area.success { /* Added for potential future use */
+             background-color: #d4edda;
+             color: #155724;
+             border-color: #c3e6cb;
+             display: block;
+        }
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        #result.success-border {
+            border-left: 5px solid #28a745;
+        }
+        #result.error-border {
+            border-left: 5px solid #dc3545;
+        }
+        #result h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #495057;
+        }
+         #result p {
+            margin-bottom: 10px;
+            color: #495057;
+         }
+         #result strong {
+            color: #343a40;
+         }
+        #result pre {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #495057;
+            font-size: 0.9em;
+            border: 1px solid #ced4da;
+        }
+        .status {
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        .status-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-failed {
+            background-color: #dc3545;
+            color: white;
+        }
+        .error-message {
+            color: #721c24;
+            font-weight: bold;
+        }
+        hr {
+            margin: 40px 0;
+            border: 0;
+            border-top: 1px solid #dee2e6;
+        }
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+        .instructions li {
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+        .instructions li::before {
+            content: "✓"; /* Check mark */
+            position: absolute;
+            left: 0;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .note {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 15px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .warning {
+             background-color: #fff3cd;
+             color: #856404;
+             padding: 15px;
+             border: 1px solid #ffeeba;
+             border-radius: 4px;
+             margin-bottom: 20px;
+             font-size: 0.9em;
+        }
+        .warning strong {
+             color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Scrapebase Authorization Demo</h1>
+        <p>Test the scraping API with different user roles and permissions.</p>
+
+        <!-- ********************************************************** -->
+        <!-- SECURITY WARNING                                           -->
+        <!-- ********************************************************** -->
+        <div class="warning">
+            <strong>Warning:</strong> API keys are included directly in this file's source code for demonstration purposes. Do not deploy this file publicly with real, sensitive API keys. In a production environment, API keys should be handled securely on the server-side or via environment variables during a build process.
+        </div>
+        <!-- ********************************************************** -->
+
+        <form id="scrapeForm">
+            <div>
+                <label for="apiKey">User Role</label>
+                <select id="apiKey" name="apiKey"></select>
+            </div>
+
+            <div>
+                <label for="url">Target URL</label>
+                <select id="url" name="url"></select>
+            </div>
+
+            <div>
+                <label for="mode">Scraping Mode</label>
+                <select id="mode" name="mode">
+                    <option value="basic">Basic (Free Users)</option>
+                    <option value="advanced">Advanced (Pro Users)</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submitButton">Test Scrape</button>
+        </form>
+
+        <div id="message-area"></div> <!-- Area for general status/error messages -->
+        <div id="result" style="display: none;"></div> <!-- Area for detailed results -->
+
+        <hr>
+
+        <div class="instructions">
+            <h2>Testing Instructions</h2>
+            <ul>
+                <li>Select a user role:
+                    <ul>
+                        <li><strong>Admin (2025DEVChallenge_admin)</strong>: Full access to all features</li>
+                        <li><strong>Regular User (2025DEVChallenge_user)</strong>: Limited to basic scraping</li>
+                    </ul>
+                </li>
+                <li>Choose a target URL:
+                    <ul>
+                        <li><strong>Basic Website</strong>: Accessible to all users</li>
+                        <li><strong>Premium Site</strong>: Requires Pro/Admin access</li>
+                        <li><strong>Complex Sites</strong>: Tests advanced scraping features</li>
+                    </ul>
+                </li>
+                <li>Select scraping mode:
+                    <ul>
+                        <li><strong>Basic</strong>: Simple content extraction (Free users)</li>
+                        <li><strong>Advanced</strong>: Full HTML and JavaScript rendering (Pro/Admin only)</li>
+                    </ul>
+                </li>
+                <li>Click "Test Scrape" to see authorization in action!</li>
+            </ul>
+            <p class="note">
+                <strong>Authorization Features:</strong><br>
+                • Role-based access control (Free vs Pro vs Admin)<br>
+                • Resource-based permissions (Premium domains)<br>
+                • Action-based control (Basic vs Advanced scraping)<br>
+                • Rate limiting per user tier
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const API_ENDPOINT = 'http://localhost:8080/api/processLinks'; // Updated to correct port
+
+        const TEST_CREDENTIALS = {
+          admin: {
+            // WARNING: Hardcoded key for local testing ONLY. See warning above.
+            apiKey: '2025DEVChallenge_admin',
+            label: 'Admin User',
+          },
+          pro: {
+            // WARNING: Hardcoded key for local testing ONLY. See warning above.
+            apiKey: '2025DEVChallenge_pro',
+            label: 'Pro User',
+          },
+          free: {
+            // WARNING: Hardcoded key for local testing ONLY. See warning above.
+            apiKey: '2025DEVChallenge_free',
+            label: 'Free User',
+          }
+        };
+
+        const TEST_URLS = [
+          { url: 'https://example.com', label: 'Basic Website (Free)' },
+          { url: 'https://premium-site1.com', label: 'Premium Site (Pro Only)' },
+          { url: 'https://news.ycombinator.com', label: 'Hacker News (Complex)' },
+          { url: 'https://dev.to', label: 'Dev.to (JavaScript Heavy)' },
+          { url: 'https://github.com', label: 'GitHub (Rate Limited)' }
+        ];
+
+        // --- DOM Elements ---
+        const apiKeySelect = document.getElementById('apiKey');
+        const urlSelect = document.getElementById('url');
+        const modeSelect = document.getElementById('mode');
+        const form = document.getElementById('scrapeForm');
+        const submitButton = document.getElementById('submitButton');
+        const resultDiv = document.getElementById('result');
+        const messageArea = document.getElementById('message-area');
+
+        // --- Initialization ---
+        function initializeForm() {
+            // Populate User Role dropdown
+            apiKeySelect.innerHTML = ''; // Clear existing options
+            Object.entries(TEST_CREDENTIALS).forEach(([key, { apiKey, label }]) => {
+                const option = document.createElement('option');
+                option.value = apiKey;
+                option.textContent = label;
+                apiKeySelect.appendChild(option);
+            });
+            // Default to Free User
+            if (TEST_CREDENTIALS.free) {
+                apiKeySelect.value = TEST_CREDENTIALS.free.apiKey;
+            }
+
+            // Populate Target URL dropdown
+            urlSelect.innerHTML = ''; // Clear existing options
+            TEST_URLS.forEach(({ url, label }) => {
+                const option = document.createElement('option');
+                option.value = url;
+                option.textContent = `${label} - ${url}`;
+                urlSelect.appendChild(option);
+            });
+            // Default to first URL
+            if (TEST_URLS.length > 0) {
+                urlSelect.value = TEST_URLS[0].url;
+            }
+
+             // Add form submit listener
+            form.addEventListener('submit', handleFormSubmit);
+        }
+
+        // --- Event Handlers ---
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            setLoadingState(true);
+            clearPreviousResults();
+
+            const selectedApiKey = apiKeySelect.value;
+            const selectedUrl = urlSelect.value;
+            const isAdvanced = modeSelect.value === 'advanced';
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': selectedApiKey, // Send the selected API key
+                    },
+                    body: JSON.stringify({
+                        url: selectedUrl,
+                        advanced: isAdvanced,
+                    }),
+                });
+
+                // Check if response is ok (status in the range 200-299)
+                if (!response.ok) {
+                    // Try to parse error from response body, otherwise use status text
+                    let errorMsg = `HTTP error! Status: ${response.status} ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.error || errorData.message || JSON.stringify(errorData);
+                    } catch (parseError) {
+                        // Ignore if body isn't JSON or empty
+                    }
+                     throw new Error(errorMsg); // Throw to be caught by the catch block
+                }
+
+                const data = await response.json(); // Assuming successful responses are JSON
+                displayResults(data);
+
+                // Show a top-level message based on success/failure
+                if (!data.success && data.error) {
+                     showMessage(`Request failed: ${data.error}`, 'error');
+                } else if (!data.success) {
+                     showMessage('Request failed for an unknown reason.', 'error');
+                } else {
+                    // Optionally show a success message
+                    // showMessage('Scrape successful!', 'success');
+                }
+
+            } catch (error) {
+                console.error('API Request Error:', error);
+                // Display network errors or errors thrown from response check
+                showMessage(`Error: ${error.message || 'Failed to fetch. Check network or server status.'}`, 'error');
+                resultDiv.style.display = 'none'; // Hide result area on critical error
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        // --- UI Update Functions ---
+        function setLoadingState(isLoading) {
+            submitButton.disabled = isLoading;
+            submitButton.textContent = isLoading ? 'Scraping...' : 'Test Scrape';
+            form.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+        }
+
+        function clearPreviousResults() {
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+            resultDiv.className = ''; // Reset result styling classes
+            messageArea.style.display = 'none';
+            messageArea.textContent = '';
+            messageArea.className = 'message-area'; // Reset message styling classes
+        }
+
+        function displayResults(data) {
+            resultDiv.style.display = 'block';
+            resultDiv.classList.add(data.success ? 'success-border' : 'error-border');
+
+            let resultHTML = `<span class="status ${data.success ? 'status-success' : 'status-failed'}">${data.success ? 'Success' : 'Failed'}</span>`;
+
+            if (data.error) {
+                resultHTML += `<div><h3>Error Details</h3><p class="error-message">${escapeHTML(data.error)}</p></div>`;
+            }
+
+            if (data.details) {
+                resultHTML += `<div><h3>Details</h3><p>${escapeHTML(data.details)}</p></div>`;
+            }
+
+            if (data.content) {
+                resultHTML += `
+                    <div>
+                        <h3>Content Preview (first 500 chars)</h3>
+                        <pre>${escapeHTML(data.content.substring(0, 500))}${data.content.length > 500 ? '...' : ''}</pre>
+                    </div>
+                `;
+            } else if (data.success && !data.content) {
+                 resultHTML += `<p><em>No content returned.</em></p>`;
+            }
+
+            resultDiv.innerHTML = resultHTML;
+        }
+
+        function showMessage(message, type = 'error') { // Default to error for messages
+             messageArea.textContent = message;
+             messageArea.className = `message-area ${type}`; // type should be 'error', 'success'
+             messageArea.style.display = 'block';
+        }
+
+        // --- Utility Functions ---
+        function escapeHTML(str) {
+            if (typeof str !== 'string') return str; // Return non-strings as is
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML; // Use browser's built-in escaping
+        }
+
+        // --- Run Initialization ---
+        document.addEventListener('DOMContentLoaded', initializeForm);
+
+    </script>
+</body>
+</html>
