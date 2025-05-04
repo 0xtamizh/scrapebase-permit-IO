@@ -157,21 +157,28 @@ app.use(async (req, res, next) => {
       email: 'john@company.com'
     };
 
-    // Sync user first
-    await permit.api.syncUser(user);
-    
-    // Then check permissions
-    let allowed = false;
     try {
-      allowed = await permit.check(user, 'read', 'website');
-      logger.debug(`Permission check result: ${allowed}`);
+      // Sync user with Permit.io
+      await permit.api.syncUser(user);
+      
+      // Check if user has permission to read website content
+      const allowed = await permit.check(user, 'read', 'website');
+      
+      if (!allowed) {
+        logger.warn(`Access denied for user ${user.key} - insufficient permissions`);
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Access denied - You need appropriate permissions to scrape websites' 
+        });
+      }
+
+      // If we get here, user is authorized
+      logger.info(`User ${user.key} authorized to process website`);
+      
+      // Continue with the rest of the request processing...
     } catch (err) {
       logger.error('Permit PDP connection error:', err);
       return res.status(500).json({ success: false, error: 'Authorization service unavailable' });
-    }
-
-    if (!allowed) {
-      return res.status(403).json({ success: false, error: 'Access denied by policy' });
     }
   }
   next();
