@@ -784,8 +784,12 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         // Configuration
-        const API_ENDPOINT = 'http://localhost:8080/api/processLinks';
-        const BLACKLIST_ENDPOINT = 'http://localhost:8080/api/blacklist';
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8080'
+            : `${window.location.protocol}//${window.location.host}`;
+            
+        const API_ENDPOINT = `${API_BASE_URL}/api/processLinks`;
+        const BLACKLIST_ENDPOINT = `${API_BASE_URL}/api/blacklist`;
         
         // API Keys - Make sure these match your backend configuration
         const API_KEYS = {
@@ -1013,7 +1017,7 @@
                     // Process text if pro features are enabled
                     if (planToggle.checked && (document.getElementById('cleanContent').checked || document.getElementById('summarizeContent').checked)) {
                         try {
-                            const processResponse = await fetch('http://localhost:8080/api/text/process', {
+                            const processResponse = await fetch(`${API_BASE_URL}/api/text/process`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1210,7 +1214,7 @@
         // System Status Management
         async function loadSystemStatus() {
             try {
-                const response = await fetch('http://localhost:8080/health');
+                const response = await fetch(`${API_BASE_URL}/health`);
                 const status = await response.json();
                 
                 const systemStatus = document.getElementById('systemStatus');
