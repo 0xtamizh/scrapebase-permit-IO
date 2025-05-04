@@ -54,9 +54,14 @@ export const requestQueue = new RequestQueue(
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Serve static files from root directory
+app.use(express.static(process.cwd()));
+
 // Apply middleware
 app.use(cors({
-  origin: ['http://127.0.0.1:5500', 'http://localhost:5500'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? '*'  // Allow all origins in production
+    : ['http://127.0.0.1:5500', 'http://localhost:5500'],
   methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'x-api-key']
 }));
@@ -147,6 +152,11 @@ app.use('/api/text', summarizeRouter);
 // Public routes
 app.use('/metrics', metrics);
 app.use('/process', processWebsiteRouter);
+
+// Catch-all route to serve index.html
+app.get('*', (req, res) => {
+    res.sendFile('index.html', { root: process.cwd() });
+});
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
