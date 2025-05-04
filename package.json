@@ -5,12 +5,14 @@
   "type": "commonjs",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "start": "node dist/index.js",
-    "build": "tsc && mkdir -p dist/public && cp index.html dist/ && cp -r public/* dist/public/ || true",
+    "prebuild": "rm -rf dist && mkdir -p dist/public",
+    "build": "tsc && npm run copy-static",
+    "copy-static": "cp -f index.html dist/ && cp -rf public/. dist/public/ || echo 'No public files to copy'",
+    "start": "NODE_ENV=production node dist/index.js",
     "watch": "tsc -w",
     "test": "playwright test",
     "test:ci": "playwright test --config=playwright.config.ts",
-    "postinstall": "npm run build",
+    "postinstall": "npm run build || exit 1",
     "audit:fix": "npm audit fix"
   },
   "devDependencies": {

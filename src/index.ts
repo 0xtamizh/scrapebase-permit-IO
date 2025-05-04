@@ -15,6 +15,9 @@ import blacklistRouter from './routes/blacklist';
 import summarizeRouter from './routes/summarize';
 import { RequestQueue } from './utils/requestQueue';
 import metrics from './routes/metrics';
+import path from 'path';
+import fs from 'fs';
+
 // Initialize environment variables
 dotenv.config();
 
@@ -54,18 +57,18 @@ export const requestQueue = new RequestQueue(
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Determine the static file directory based on environment
-const staticDir = process.env.NODE_ENV === 'production' ? 'dist' : '.';
-const publicDir = process.env.NODE_ENV === 'production' ? 'dist/public' : 'public';
+// Determine root directory and static paths
+const rootDir = process.env.NODE_ENV === 'production' ? path.join(process.cwd(), 'dist') : process.cwd();
+const publicDir = path.join(rootDir, 'public');
 
-// Serve static files
-app.use(express.static(staticDir));
+// Configure static file serving
+app.use(express.static(rootDir, { index: false }));  // Serve files from root but don't auto-serve index.html
 app.use('/public', express.static(publicDir));
 
 // Apply middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? '*'  // Allow all origins in production
+    ? '*'
     : ['http://127.0.0.1:5500', 'http://localhost:5500'],
   methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'x-api-key']
@@ -159,8 +162,16 @@ app.use('/metrics', metrics);
 app.use('/process', processWebsiteRouter);
 
 // Catch-all route to serve index.html
-app.get('*', (req, res) => {
-    res.sendFile('index.html', { root: staticDir });
+app.get('*', (req, res, next) => {
+    const indexPath = path.join(rootDir, 'index.html');
+    
+    // Check if index.html exists
+    if (!fs.existsSync(indexPath)) {
+        logger.error(`index.html not found at ${indexPath}`);
+        return next(new Error('index.html not found'));
+    }
+    
+    res.sendFile(indexPath);
 });
 
 // Error handling middleware
