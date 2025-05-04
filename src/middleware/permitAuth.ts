@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Permit } from 'permitio';
 import winston from 'winston';
 import dotenv from 'dotenv';
+import { isBlacklisted } from '../routes/blacklist';
 
 // Ensure environment variables are loaded
 dotenv.config();
@@ -94,6 +95,7 @@ export const permitAuth = async (req: Request, res: Response, next: NextFunction
     }
 
     const hostname = new URL(url).hostname;
+    const isBlacklistedDomain = isBlacklisted(hostname);
 
     // Create user object with proper tier-based roles
     const user: PermitUser = {
@@ -118,13 +120,14 @@ export const permitAuth = async (req: Request, res: Response, next: NextFunction
     // Sync user with Permit.io
     await permit.api.syncUser(user);
 
-    // Create resource with proper key and attributes
+    // Create resource with proper key and attributes including blacklist status
     const resource = {
       type: 'website',
       key: hostname,
       attributes: {
         domain: hostname,
-        is_premium: isAdvanced
+        is_premium: isAdvanced,
+        is_blacklisted: isBlacklistedDomain
       }
     };
 
@@ -152,15 +155,34 @@ export const permitAuth = async (req: Request, res: Response, next: NextFunction
       action,
       userKey: user.key,
       tier,
-      roles: user.attributes?.roles
+      roles: user.attributes?.roles,
+      isBlacklisted: isBlacklistedDomain
     });
 
     if (!permissionCheck) {
       logger.warn(`Access denied for user ${user.key} (${tier}) - insufficient permissions for ${action}`);
+      
+      // Return specific error for blacklisted domains
+      if (isBlacklistedDomain) {
+        return res.status(403).json({
+          success: false,
+          error: 'Access denied by Permit.io',
+          details: 'This domain has been blacklisted by administrators',
+          permit_decision: {
+            allowed: false,
+            reason: 'blacklisted_domain'
+          }
+        });
+      }
+      
       return res.status(403).json({
         success: false,
-        error: 'Access denied',
-        details: `Your current plan (${tier}) does not allow ${action} operations`
+        error: 'Access denied by Permit.io',
+        details: `Your current plan (${tier}) does not allow ${action} operations`,
+        permit_decision: {
+          allowed: false,
+          reason: 'insufficient_permissions'
+        }
       });
     }
 

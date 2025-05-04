@@ -11,6 +11,7 @@ import { permitAuth } from './middleware/permitAuth';
 import { browserManager } from './browserManager';
 import { processWebsite } from './processLinks'; // Import the processWebsite middleware directly
 import processWebsiteRouter from './routes/processWebsite'; // Import our new processWebsite router
+import blacklistRouter from './routes/blacklist';
 import { RequestQueue } from './utils/requestQueue';
 import metrics from './routes/metrics';
 // Initialize environment variables
@@ -55,7 +56,7 @@ const port = process.env.PORT || 8080;
 // Apply middleware
 app.use(cors({
   origin: ['http://127.0.0.1:5500', 'http://localhost:5500'],
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'x-api-key']
 }));
 // app.use(helmet());
@@ -117,9 +118,25 @@ app.use(rateLimiterMiddleware);
 // Protected routes with Permit.io authorization
 app.post('/api/processLinks', permitAuth, processWebsite);
 
+// Mount blacklist router with proper error handling
+app.use('/api/blacklist', (req, res, next) => {
+    // Check for API key
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKey || apiKey !== process.env.ADMIN_API_KEY) {
+        return res.status(401).json({ error: 'Invalid or missing API key' });
+    }
+    next();
+}, blacklistRouter);
+
 // Public routes
 app.use('/metrics', metrics);
 app.use('/process', processWebsiteRouter);
+
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    logger.error('Unhandled error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+});
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

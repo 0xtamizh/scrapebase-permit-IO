@@ -476,7 +476,10 @@
             <!-- Feature Comparison -->
             <div class="grid grid-cols-2 gap-8 mb-8">
                 <div class="feature-list">
-                    <h3 class="text-lg font-bold mb-4">Basic Features</h3>
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="mr-2">Basic Features</span>
+                        <span class="text-xs px-2 py-1 bg-gray-700 rounded">5 req/min</span>
+                    </h3>
                     <div class="feature-item">
                         <i class="fas fa-check"></i>
                         <span>Basic content scraping</span>
@@ -491,7 +494,10 @@
                     </div>
                 </div>
                 <div class="feature-list">
-                    <h3 class="text-lg font-bold mb-4">Pro Features</h3>
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="mr-2">Pro Features</span>
+                        <span class="text-xs px-2 py-1 bg-blue-700 rounded">10 req/min</span>
+                    </h3>
                     <div class="feature-item">
                         <i class="fas fa-star"></i>
                         <span>Advanced scraping</span>
@@ -539,17 +545,36 @@
                     </button>
                 </div>
 
-                <input type="text" id="customDomain" 
-                       placeholder="Or enter custom domain..." 
-                       class="w-full p-3 dark-input rounded">
+                <div class="flex gap-4">
+                    <input type="text" id="customDomain" 
+                           placeholder="Or enter custom domain..." 
+                           class="flex-1 p-3 dark-input rounded">
+                    <button id="scrapeBtn" class="btn btn-primary whitespace-nowrap">
+                        <span id="scrapeBtnText">Start Scraping</span>
+                        <span id="scrapeSpinner" class="spinner" style="display: none;"></span>
+                    </button>
+                </div>
+
+                <div class="mt-4" id="blacklistWarning" style="display: none;">
+                    <div class="bg-red-900/50 border border-red-700 rounded p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
+                            <div class="ml-3">
+                                <h4 class="text-red-400 font-semibold">Domain Blacklisted</h4>
+                                <p class="text-sm text-red-300">This domain has been blacklisted by administrators and cannot be scraped.</p>
+                            </div>
+                            <button onclick="document.getElementById('blacklistWarning').style.display='none'" 
+                                    class="ml-auto text-red-400 hover:text-red-300">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="mt-4">
-                    <p class="text-sm text-gray-400 mb-2">Blacklisted domains (cannot be scraped):</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="blacklist-domain">facebook.com</span>
-                        <span class="blacklist-domain">twitter.com</span>
-                        <span class="blacklist-domain">instagram.com</span>
-                        <span class="blacklist-domain">linkedin.com</span>
+                    <p class="text-sm text-gray-400 mb-2">Currently blacklisted domains:</p>
+                    <div id="currentBlacklist" class="flex flex-wrap gap-2">
+                        <!-- Blacklisted domains will be shown here -->
                     </div>
                 </div>
             </div>
@@ -597,17 +622,33 @@
         <!-- Admin Interface -->
         <div id="adminInterface" class="max-w-4xl mx-auto mt-8" style="display: none;">
             <div class="dark-card p-6">
-                <h3 class="text-xl font-bold mb-4">Blacklist Management</h3>
-                <div class="flex gap-4 mb-4">
-                    <input type="text" id="newBlacklistDomain" 
-                           placeholder="Enter domain to blacklist..." 
-                           class="flex-1 p-3 dark-input rounded">
-                    <button id="addBlacklistBtn" class="btn btn-primary">
-                        Add to Blacklist
-                    </button>
+                <h3 class="text-xl font-bold mb-4">Domain Management</h3>
+                
+                <!-- System Status -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-semibold mb-4">System Status</h4>
+                    <div id="systemStatus" class="grid grid-cols-3 gap-4">
+                        <!-- Status will be populated dynamically -->
+                        <div class="dark-card p-4">
+                            <div class="text-sm text-gray-400">Loading status...</div>
+                        </div>
+                    </div>
                 </div>
-                <div id="blacklistContainer" class="flex flex-wrap gap-2">
-                    <!-- Blacklisted domains will be added here -->
+                
+                <!-- Blacklist Management -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-semibold mb-4">Blacklist Management</h4>
+                    <div class="flex gap-4 mb-4">
+                        <input type="text" id="newBlacklistDomain" 
+                               placeholder="Enter domain to blacklist..." 
+                               class="flex-1 p-3 dark-input rounded">
+                        <button id="addBlacklistBtn" class="btn btn-primary">
+                            Add to Blacklist
+                        </button>
+                    </div>
+                    <div id="blacklistContainer" class="flex flex-wrap gap-2">
+                        <!-- Blacklisted domains will be added here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -645,9 +686,34 @@
         const renderedBtn = document.getElementById('renderedBtn');
         const adminInterface = document.getElementById('adminInterface');
 
-        // Show login modal on load
+        // Check login state on load
         window.onload = () => {
-            loginModal.style.display = 'block';
+            const loginState = JSON.parse(localStorage.getItem('loginState') || 'null');
+            if (loginState) {
+                // Restore login state
+                modeToggle.checked = loginState.isAdmin;
+                userTier.textContent = loginState.isAdmin ? 'Admin Mode' : 'User Mode';
+                adminInterface.style.display = loginState.isAdmin ? 'block' : 'none';
+                loginModal.style.display = 'none';
+                
+                // Restore plan state if saved
+                if (loginState.isPro) {
+                    planToggle.checked = true;
+                    proFeatures.style.display = 'block';
+                }
+
+                // Toggle credentials visibility based on mode
+                userCreds.style.display = loginState.isAdmin ? 'none' : 'block';
+                adminCreds.style.display = loginState.isAdmin ? 'block' : 'none';
+
+                // Load admin features if in admin mode
+                if (loginState.isAdmin) {
+                    loadBlacklist();
+                    loadSystemStatus();
+                }
+            } else {
+                loginModal.style.display = 'block';
+            }
         };
 
         // Handle mode toggle
@@ -676,8 +742,16 @@
         // Handle login
         loginForm.onsubmit = (e) => {
             e.preventDefault();
-            loginModal.style.display = 'none';
             const isAdmin = modeToggle.checked;
+            
+            // Save login state
+            localStorage.setItem('loginState', JSON.stringify({
+                isAdmin,
+                isPro: planToggle.checked,
+                timestamp: new Date().getTime()
+            }));
+
+            loginModal.style.display = 'none';
             userTier.textContent = isAdmin ? 'Admin Mode' : 'User Mode';
             adminInterface.style.display = isAdmin ? 'block' : 'none';
         };
@@ -686,6 +760,11 @@
         planToggle.onchange = () => {
             proFeatures.style.display = planToggle.checked ? 'block' : 'none';
             updateProgressSteps(1);
+            
+            // Update stored login state with new plan selection
+            const loginState = JSON.parse(localStorage.getItem('loginState') || '{}');
+            loginState.isPro = planToggle.checked;
+            localStorage.setItem('loginState', JSON.stringify(loginState));
         };
 
         // Handle domain buttons
@@ -728,20 +807,31 @@
 
         // Handle scrape button
         scrapeBtn.onclick = async () => {
-            const domain = document.getElementById('customDomain').value;
+            const domain = document.getElementById('customDomain').value.trim();
             if (!domain) return;
 
-            updateProgressSteps(3);
-            scrapeBtn.disabled = true;
-            scrapeBtnText.textContent = 'Scraping...';
-            scrapeSpinner.style.display = 'inline-block';
-            
             try {
+                updateProgressSteps(3);
+                scrapeBtn.disabled = true;
+                scrapeBtnText.textContent = 'Scraping...';
+                scrapeSpinner.style.display = 'inline-block';
+
+                // Get the appropriate API key based on user state
+                const loginState = JSON.parse(localStorage.getItem('loginState') || '{}');
+                let apiKey;
+                if (loginState.isAdmin) {
+                    apiKey = API_KEYS.admin;
+                } else if (planToggle.checked) {
+                    apiKey = API_KEYS.pro;
+                } else {
+                    apiKey = API_KEYS.free;
+                }
+
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': planToggle.checked ? API_KEYS.pro : API_KEYS.free
+                        'x-api-key': apiKey
                     },
                     body: JSON.stringify({
                         url: `https://${domain}`,
@@ -752,13 +842,116 @@
                 const data = await response.json();
                 
                 results.style.display = 'block';
-                updateProgressSteps(4);
 
                 if (data.success) {
+                    updateProgressSteps(4);
                     resultsContent.innerHTML = `<pre class="whitespace-pre-wrap">${data.content}</pre>`;
                     renderedBtn.style.display = planToggle.checked ? 'block' : 'none';
+                    
+                    // Update rendered content if it's currently visible
+                    if (renderedContent.style.display === 'block') {
+                        renderedContent.innerHTML = marked.parse(data.content);
+                    }
                 } else {
-                    resultsContent.innerHTML = `<div class="text-red-500">Error: ${data.error || 'Unknown error'}</div>`;
+                    // Handle rate limit error
+                    if (data.message && data.message.includes('Rate limit exceeded')) {
+                        const retryAfter = data.retryAfter || 60;
+                        let timeLeft = retryAfter;
+                        
+                        const updateRateLimitMessage = () => {
+                            // Check if user has upgraded to pro
+                            if (planToggle.checked) {
+                                clearInterval(window.countdownInterval);
+                                resultsContent.innerHTML = `
+                                    <div class="bg-blue-900/50 border border-blue-700 rounded p-4">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-arrow-circle-up text-blue-500 mt-1"></i>
+                                            <div class="ml-3">
+                                                <h4 class="text-blue-400 font-semibold">Pro Plan Active</h4>
+                                                <p class="text-sm text-blue-300">You can now make requests with increased rate limits!</p>
+                                                <button onclick="scrapeBtn.click()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                                    Try Again Now
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                return;
+                            }
+
+                            resultsContent.innerHTML = `
+                                <div class="bg-red-900/50 border border-red-700 rounded p-4">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-circle text-red-500 mt-1"></i>
+                                        <div class="ml-3">
+                                            <h4 class="text-red-400 font-semibold">Rate Limit Exceeded</h4>
+                                            <p class="text-sm text-red-300">${data.message}</p>
+                                            <p class="text-sm text-red-300 mt-2">You can try again in: ${timeLeft} seconds</p>
+                                            <div class="mt-3 p-3 bg-blue-900/50 border border-blue-700 rounded">
+                                                <p class="text-sm text-blue-300">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    Upgrade to Pro for increased rate limits (10 requests/minute)
+                                                </p>
+                                                <label class="flex items-center mt-2 cursor-pointer">
+                                                    <input type="checkbox" 
+                                                           class="form-checkbox" 
+                                                           ${planToggle.checked ? 'checked' : ''} 
+                                                           onchange="planToggle.checked = this.checked; planToggle.dispatchEvent(new Event('change'))">
+                                                    <span class="ml-2 text-blue-300">Switch to Pro Plan</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        };
+                        
+                        updateRateLimitMessage();
+                        
+                        // Store interval in window to access it globally
+                        if (window.countdownInterval) {
+                            clearInterval(window.countdownInterval);
+                        }
+                        
+                        // Start countdown timer
+                        window.countdownInterval = setInterval(() => {
+                            timeLeft--;
+                            if (timeLeft <= 0) {
+                                clearInterval(window.countdownInterval);
+                                resultsContent.innerHTML = `
+                                    <div class="bg-green-900/50 border border-green-700 rounded p-4">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                                            <div class="ml-3">
+                                                <h4 class="text-green-400 font-semibold">Rate Limit Reset</h4>
+                                                <p class="text-sm text-green-300">You can now make new requests</p>
+                                                <button onclick="scrapeBtn.click()" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                                                    Try Again
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            } else {
+                                updateRateLimitMessage();
+                            }
+                        }, 1000);
+                        
+                        renderedContent.innerHTML = '';
+
+                        // Listen for plan toggle changes
+                        planToggle.addEventListener('change', updateRateLimitMessage);
+                    } else {
+                        // Show other error messages (Permit.io decisions, etc.)
+                        const errorMessage = data.permit_decision ? 
+                            `${data.error}: ${data.details}` :
+                            (data.error || data.message || 'Unknown error');
+                        
+                        resultsContent.innerHTML = `<div class="text-red-500">${errorMessage}</div>`;
+                        renderedContent.innerHTML = '';
+                        
+                        // Show blacklist warning if domain is blacklisted according to Permit.io
+                        if (data.permit_decision?.reason === 'blacklisted_domain') {
+                            document.getElementById('blacklistWarning').style.display = 'block';
+                        }
+                    }
                 }
             } catch (error) {
                 results.style.display = 'block';
@@ -782,6 +975,10 @@
 
         // Handle logout
         document.getElementById('logoutBtn').onclick = () => {
+            // Clear login state
+            localStorage.removeItem('loginState');
+            
+            // Reset UI
             loginModal.style.display = 'block';
             results.style.display = 'none';
             loginForm.reset();
@@ -793,69 +990,218 @@
             adminCreds.style.display = 'none';
             adminInterface.style.display = 'none';
             updateProgressSteps(1);
+            
+            // Clear any intervals
+            clearInterval(window.statusInterval);
         };
 
-        // Admin Blacklist Management
-        const blacklistInput = document.getElementById('newBlacklistDomain');
-        const addBlacklistBtn = document.getElementById('addBlacklistBtn');
-        const blacklistContainer = document.getElementById('blacklistContainer');
+        // System Status Management
+        async function loadSystemStatus() {
+            try {
+                const response = await fetch('http://localhost:8080/health');
+                const status = await response.json();
+                
+                const systemStatus = document.getElementById('systemStatus');
+                systemStatus.innerHTML = `
+                    <div class="dark-card p-4">
+                        <div class="text-2xl font-bold mb-2">${status.queue?.activeRequests || 0}</div>
+                        <div class="text-sm text-gray-400">Active Requests</div>
+                    </div>
+                    <div class="dark-card p-4">
+                        <div class="text-2xl font-bold mb-2">${status.queue?.queuedRequests || 0}</div>
+                        <div class="text-sm text-gray-400">Queued Requests</div>
+                    </div>
+                    <div class="dark-card p-4">
+                        <div class="text-2xl font-bold mb-2">${status.memory?.heapUsed || '0MB'}</div>
+                        <div class="text-sm text-gray-400">Memory Usage</div>
+                    </div>
+                    <div class="dark-card p-4">
+                        <div class="text-2xl font-bold mb-2">${status.uptime || '0'}</div>
+                        <div class="text-sm text-gray-400">Uptime</div>
+                    </div>
+                    <div class="dark-card p-4">
+                        <div class="text-2xl font-bold mb-2 ${status.browser?.isActive ? 'text-green-500' : 'text-red-500'}">
+                            ${status.browser?.isActive ? 'Active' : 'Inactive'}
+                        </div>
+                        <div class="text-sm text-gray-400">Browser Status</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load system status:', error);
+                const systemStatus = document.getElementById('systemStatus');
+                systemStatus.innerHTML = `
+                    <div class="dark-card p-4 col-span-3">
+                        <div class="text-red-500">Failed to load system status: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
 
-        // Load blacklist
+        // Admin Blacklist Management
         async function loadBlacklist() {
             try {
-                const response = await fetch(BLACKLIST_ENDPOINT);
+                const response = await fetch('http://localhost:8080/api/blacklist', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'x-api-key': API_KEYS.admin
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const domains = await response.json();
                 updateBlacklistUI(domains);
             } catch (error) {
                 console.error('Failed to load blacklist:', error);
+                const container = document.getElementById('blacklistContainer');
+                container.innerHTML = `
+                    <div class="text-red-500 p-4">Failed to load blacklist: ${error.message}</div>
+                `;
             }
         }
 
         // Update blacklist UI
         function updateBlacklistUI(domains) {
-            blacklistContainer.innerHTML = domains.map(domain => `
-                <div class="blacklist-domain">
-                    ${domain}
-                    <button onclick="removeDomain('${domain}')" class="ml-2 text-red-400 hover:text-red-300">
+            const container = document.getElementById('blacklistContainer');
+            if (!Array.isArray(domains) || domains.length === 0) {
+                container.innerHTML = `
+                    <div class="text-gray-400 p-4">No domains in blacklist</div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = domains.map(domain => `
+                <div class="blacklist-domain group relative">
+                    <span class="font-mono">${domain}</span>
+                    <button onclick="removeDomain('${domain}')" 
+                            class="ml-2 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Remove from blacklist">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             `).join('');
         }
 
+        // Load both blacklist and system status when admin interface is shown
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.id === 'adminInterface' && 
+                    mutation.target.style.display === 'block') {
+                    loadBlacklist();
+                    loadSystemStatus();
+                    updateCurrentBlacklist();
+                    // Refresh status every 30 seconds
+                    clearInterval(window.statusInterval);
+                    window.statusInterval = setInterval(() => {
+                        loadSystemStatus();
+                        updateCurrentBlacklist();
+                    }, 30000);
+                }
+            });
+        });
+
+        observer.observe(document.getElementById('adminInterface'), {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+
         // Add domain to blacklist
-        addBlacklistBtn.onclick = async () => {
-            const domain = blacklistInput.value.trim();
-            if (!domain) return;
+        document.getElementById('addBlacklistBtn').onclick = async () => {
+            const input = document.getElementById('newBlacklistDomain');
+            const domain = input.value.trim().toLowerCase();
+            if (!domain) {
+                alert('Please enter a domain');
+                return;
+            }
+
+            // Basic domain validation
+            if (!/^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/.test(domain)) {
+                alert('Please enter a valid domain (e.g., example.com)');
+                return;
+            }
 
             try {
-                const response = await fetch(BLACKLIST_ENDPOINT, {
+                const response = await fetch('http://localhost:8080/api/blacklist', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'x-api-key': API_KEYS.admin
+                    },
                     body: JSON.stringify({ domain })
                 });
 
-                if (response.ok) {
-                    blacklistInput.value = '';
-                    loadBlacklist();
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
+
+                input.value = '';
+                await loadBlacklist();
             } catch (error) {
                 console.error('Failed to add domain:', error);
+                alert(`Failed to add domain: ${error.message}`);
             }
         };
 
         // Remove domain from blacklist
         async function removeDomain(domain) {
+            if (!confirm(`Are you sure you want to remove ${domain} from the blacklist?`)) {
+                return;
+            }
+
             try {
-                const response = await fetch(`${BLACKLIST_ENDPOINT}/${domain}`, {
-                    method: 'DELETE'
+                const response = await fetch(`http://localhost:8080/api/blacklist/${encodeURIComponent(domain)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'x-api-key': API_KEYS.admin
+                    }
                 });
 
-                if (response.ok) {
-                    loadBlacklist();
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
+
+                await loadBlacklist();
             } catch (error) {
                 console.error('Failed to remove domain:', error);
+                alert(`Failed to remove domain: ${error.message}`);
+            }
+        }
+
+        // Add this to your JavaScript
+        async function updateCurrentBlacklist() {
+            try {
+                const response = await fetch('http://localhost:8080/api/blacklist', {
+                    headers: {
+                        'x-api-key': API_KEYS.admin
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const domains = await response.json();
+                const container = document.getElementById('currentBlacklist');
+                
+                if (domains.length === 0) {
+                    container.innerHTML = '<span class="text-gray-500">No domains blacklisted</span>';
+                    return;
+                }
+                
+                container.innerHTML = domains.map(domain => `
+                    <span class="px-2 py-1 bg-red-900/30 border border-red-700 rounded text-sm">
+                        ${domain}
+                    </span>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load blacklist:', error);
             }
         }
     </script>
