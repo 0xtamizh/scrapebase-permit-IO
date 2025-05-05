@@ -1069,8 +1069,22 @@
                         }
                     }
                 } else {
+                    // Check specifically for blacklisted domain first
+                    if (data.permit_decision && data.permit_decision.reason === 'blacklisted_domain') {
+                        document.getElementById('blacklistWarning').style.display = 'block';
+                        resultsContent.innerHTML = `
+                            <div class="bg-red-900/50 border border-red-700 rounded p-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-ban text-red-500 mt-1"></i>
+                                    <div class="ml-3">
+                                        <h4 class="text-red-400 font-semibold">Domain Blacklisted</h4>
+                                        <p class="text-sm text-red-300">This domain has been blacklisted by administrators and cannot be scraped.</p>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
                     // Handle rate limit error
-                    if (data.message && data.message.includes('Rate limit exceeded')) {
+                    else if (data.message && data.message.includes('Rate limit exceeded')) {
                         const retryAfter = data.retryAfter || 60;
                         let timeLeft = retryAfter;
                         
@@ -1162,11 +1176,6 @@
                         
                         resultsContent.innerHTML = `<div class="text-red-500">${errorMessage}</div>`;
                         renderedContent.innerHTML = '';
-                        
-                        // Show blacklist warning if domain is blacklisted according to Permit.io
-                        if (data.permit_decision?.reason === 'blacklisted_domain') {
-                            document.getElementById('blacklistWarning').style.display = 'block';
-                        }
                     }
                 }
             } catch (error) {
@@ -1215,6 +1224,13 @@
         async function loadSystemStatus() {
             try {
                 const response = await fetch(`${API_BASE_URL}/health`);
+                
+                // Check if response is valid JSON before parsing
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server returned non-JSON response. The server might be down or restarting.");
+                }
+                
                 const status = await response.json();
                 
                 const systemStatus = document.getElementById('systemStatus');
@@ -1247,7 +1263,13 @@
                 const systemStatus = document.getElementById('systemStatus');
                 systemStatus.innerHTML = `
                     <div class="dark-card p-4 col-span-3">
-                        <div class="text-red-500">Failed to load system status: ${error.message}</div>
+                        <div class="text-red-500 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Failed to load system status: ${error.message}</span>
+                        </div>
+                        <button onclick="loadSystemStatus()" class="mt-2 px-3 py-1 bg-red-800 hover:bg-red-700 rounded text-sm">
+                            Retry
+                        </button>
                     </div>
                 `;
             }
