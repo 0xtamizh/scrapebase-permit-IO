@@ -5,9 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "prebuild": "rm -rf dist && mkdir -p dist/public",
-    "build": "tsc && npm run copy-static",
-    "copy-static": "cp -f index.html dist/ && cp -rf public/. dist/public/ || echo 'No public files to copy'",
+    "prebuild": "rm -rf dist",
+    "build": "tsc && ./copy-static.sh && node verify-build.js",
     "start": "NODE_ENV=production node dist/index.js",
     "watch": "tsc -w",
     "test": "playwright test",
