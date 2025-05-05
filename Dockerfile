@@ -32,13 +32,19 @@ RUN chmod +x ./copy-static.sh
 # Install and build
 RUN npm ci --include=dev && \
     npm run build && \
-    # Ensure index.js exists in the correct location
+    # Make the script executable and run it
+    chmod +x ./copy-static.sh && \
+    ./copy-static.sh && \
+    # Verify the build
+    node verify-build.js && \
+    # Ensure index.js exists in the correct location (redundant if copy-static handles it, but safe)
     (if [ -f ./dist/src/index.js ] && [ ! -f ./dist/index.js ]; then \
         mkdir -p ./dist && \
         cp ./dist/src/index.js ./dist/index.js; \
     fi) && \
-    # Verify the build succeeded
+    # List dist contents for verification
     ls -la ./dist && \
+    # Clean up source and prune dev dependencies
     rm -rf src/ && \
     npm prune --production
 

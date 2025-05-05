@@ -6,12 +6,11 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "prebuild": "rm -rf dist",
-    "build": "tsc && chmod +x ./copy-static.sh && ./copy-static.sh && node verify-build.js",
+    "build": "tsc",
     "start": "NODE_ENV=production node dist/index.js",
     "watch": "tsc -w",
     "test": "playwright test",
     "test:ci": "playwright test --config=playwright.config.ts",
-    "postinstall": "npm run build || exit 0",
     "audit:fix": "npm audit fix"
   },
   "devDependencies": {
