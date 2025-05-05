@@ -1,7 +1,7 @@
 # Scrapebase with Permit.io Authorization
 
 A powerful web scraping API with fine-grained authorization controls powered by Permit.io. This project demonstrates how to implement sophisticated authorization patterns in a real-world API service.
-
+Demo- https://scrapebase-permit.up.railway.app/
 ## Features
 
 - **Tiered Access Control**: Different permissions for Free, Pro, and Admin users
@@ -15,8 +15,8 @@ A powerful web scraping API with fine-grained authorization controls powered by 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/scrapebase-permit
-cd scrapebase-permit
+git clone https://github.com/0xtamizh/scrapebase-permit-IO
+cd scrapebase-permit-IO
 ```
 
 2. Install dependencies:
