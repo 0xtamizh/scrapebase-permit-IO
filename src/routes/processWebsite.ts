@@ -116,16 +116,16 @@ router.post('/api/processWebsite', async (req: Request, res: Response) => {
     // Format and normalize URL
     let formattedUrl = url.trim().toLowerCase();
     
-    // // Normalize URLs to standard form
-    // if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-    //   formattedUrl = `https://${formattedUrl}`;
-    // }
-    // formattedUrl = formattedUrl.replace(/^http:\/\//, 'https://');
+    // Normalize URLs to standard form
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+    formattedUrl = formattedUrl.replace(/^http:\/\//, 'https://');
     
-    // // Validate URL after formatting
-    // if (!formattedUrl || !validator.isURL(formattedUrl, { require_protocol: true })) {
-    //   return sendErrorResponse(res, ErrorCode.INVALID_URL, 'Invalid URL provided', requestId);
-    // }
+    // Validate URL after formatting
+    if (!formattedUrl || !validator.isURL(formattedUrl, { require_protocol: true })) {
+      return sendErrorResponse(res, ErrorCode.INVALID_URL, 'Invalid URL provided', requestId);
+    }
     
     // Call processWithRetry function directly
     logger.info(`[${requestId}] Processing main page: ${formattedUrl}`);
