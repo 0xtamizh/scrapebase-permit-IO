@@ -97,6 +97,30 @@ The authorization system uses the following policy hierarchy:
    - `scrape:premium`: Access to premium domains
    - `scrape:manage`: Administrative operations
 
+#Troubleshoot
+
+1. **"Cannot find module 'permitio'"**
+   - Make sure you've run `npm install`
+   - Verify permitio is in package.json
+
+2. **"Error: Failed to launch browser"**
+   - Run `npx playwright install` to install browser dependencies
+
+3. **"Authorization service error"**
+   - Check your PERMIT_API_KEY value
+   - Make sure it's an Environment API Key, not a Project/Organization key
+   - Verify your roles are configured correctly in the Permit.io dashboard
+
+4. **"Access denied by Permit.io"**
+   - This is working as expected! It means Permit.io is denying access based on policy
+   - Check the user's role and the permission you've configured in the dashboard
+
+5. **"If incase you are stuck in connecting permit io to app"**
+   - Run the file "testPermit.js" file that will make sure connection is good are not
+   - If any error, just go to permit's dashboard and check the audit log, you will know exactly whats the issue
+
+
+
 ## Implementation Details
 
 ### Authorization Flow
