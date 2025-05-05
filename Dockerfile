@@ -21,10 +21,24 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY src/ ./src/
+COPY index.html ./
+COPY public/ ./public/
+COPY copy-static.sh ./
+COPY verify-build.js ./
+
+# Make the script executable
+RUN chmod +x ./copy-static.sh
 
 # Install and build
 RUN npm ci --include=dev && \
     npm run build && \
+    # Ensure index.js exists in the correct location
+    (if [ -f ./dist/src/index.js ] && [ ! -f ./dist/index.js ]; then \
+        mkdir -p ./dist && \
+        cp ./dist/src/index.js ./dist/index.js; \
+    fi) && \
+    # Verify the build succeeded
+    ls -la ./dist && \
     rm -rf src/ && \
     npm prune --production
 
@@ -54,6 +68,12 @@ WORKDIR /app
 COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
 COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
 COPY --from=builder --chown=appuser:appgroup /app/package.json .
+
+# Ensure index.js exists in the correct location
+RUN if [ -f ./dist/src/index.js ] && [ ! -f ./dist/index.js ]; then \
+    mkdir -p ./dist && \
+    cp ./dist/src/index.js ./dist/index.js; \
+    fi
 
 # Health check with curl
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
