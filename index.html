@@ -976,10 +976,15 @@
             const domain = document.getElementById('customDomain').value.trim();
             if (!domain) return;
             if(domain.startsWith('https://')) {
+                console.log("before", domain);
+
                 domain = domain.replace('https://','');
+                console.log("after", domain);
             }
             else if(domain.startsWith('http://')) {
+                console.log("before1", domain);
                 domain = domain.replace('http://','');
+                console.log("after1", domain);
             }
             
         
