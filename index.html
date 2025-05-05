@@ -975,10 +975,10 @@
         scrapeBtn.onclick = async () => {
             const domain = document.getElementById('customDomain').value.trim();
             if (!domain) return;
-            if(!domain.startsWith('http://')) {
+            if(domain.startsWith('http://')) {
                 domain = domain.replace('http://','');
             }
-            if(!domain.startsWith('https://')) {
+            if(domain.startsWith('https://')) {
                 domain = domain.replace('https://','');
             }
         
