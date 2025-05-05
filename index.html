@@ -993,10 +993,6 @@
                     apiKey = API_KEYS.free;
                 }
 
-                if(!domain.startsWith('http://') && !domain.startsWith('https://')) {
-                    domain = `https://${domain}`;
-                }
-
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: {
@@ -1004,7 +1000,7 @@
                         'x-api-key': apiKey
                     },
                     body: JSON.stringify({
-                        url: domain,
+                        url: `https://${domain}`,
                         advanced: planToggle.checked
                     })
                 });
