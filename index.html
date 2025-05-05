@@ -973,7 +973,7 @@
 
         // Handle scrape button
         scrapeBtn.onclick = async () => {
-            const domain = document.getElementById('customDomain').value.trim();
+            let domain = document.getElementById('customDomain').value.trim();
             if (!domain) return;
             if(domain.startsWith('https://')) {
                 console.log("before", domain);
